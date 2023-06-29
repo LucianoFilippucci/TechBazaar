@@ -2,10 +2,7 @@ package it.lucianofilippucci.university.techbazaar.entities;
 
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.Objects;
+import java.sql.Date;
 
 @Entity
 @Table(name = "auction", schema = "techbazaar", catalog = "")
@@ -18,19 +15,14 @@ public class AuctionEntity {
     @Column(name = "product_id")
     private int productId;
     @Basic
-    @Column(name = "auction_starting_price")
-    private BigDecimal auctionStartingPrice;
+    @Column(name = "starting_price")
+    private double startingPrice;
     @Basic
-    @Column(name = "auction_winner")
-    private String auctionWinner;
+    @Column(name = "winner")
+    private String winner;
     @Basic
-    @Column(name = "auction_date")
-    private Timestamp auctionDate;
-    @ManyToOne
-    @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
-    private ProductEntity productByProductId;
-    @OneToMany(mappedBy = "auctionByAuctionId")
-    private Collection<BidEntity> bidsByAuctionId;
+    @Column(name = "date")
+    private Date date;
 
     public int getAuctionId() {
         return auctionId;
@@ -48,56 +40,56 @@ public class AuctionEntity {
         this.productId = productId;
     }
 
-    public BigDecimal getAuctionStartingPrice() {
-        return auctionStartingPrice;
+    public double getStartingPrice() {
+        return startingPrice;
     }
 
-    public void setAuctionStartingPrice(BigDecimal auctionStartingPrice) {
-        this.auctionStartingPrice = auctionStartingPrice;
+    public void setStartingPrice(double startingPrice) {
+        this.startingPrice = startingPrice;
     }
 
-    public String getAuctionWinner() {
-        return auctionWinner;
+    public String getWinner() {
+        return winner;
     }
 
-    public void setAuctionWinner(String auctionWinner) {
-        this.auctionWinner = auctionWinner;
+    public void setWinner(String winner) {
+        this.winner = winner;
     }
 
-    public Timestamp getAuctionDate() {
-        return auctionDate;
+    public Date getDate() {
+        return date;
     }
 
-    public void setAuctionDate(Timestamp auctionDate) {
-        this.auctionDate = auctionDate;
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         AuctionEntity that = (AuctionEntity) o;
-        return auctionId == that.auctionId && productId == that.productId && Objects.equals(auctionStartingPrice, that.auctionStartingPrice) && Objects.equals(auctionWinner, that.auctionWinner) && Objects.equals(auctionDate, that.auctionDate);
+
+        if (auctionId != that.auctionId) return false;
+        if (productId != that.productId) return false;
+        if (Double.compare(that.startingPrice, startingPrice) != 0) return false;
+        if (winner != null ? !winner.equals(that.winner) : that.winner != null) return false;
+        if (date != null ? !date.equals(that.date) : that.date != null) return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(auctionId, productId, auctionStartingPrice, auctionWinner, auctionDate);
-    }
-
-    public ProductEntity getProductByProductId() {
-        return productByProductId;
-    }
-
-    public void setProductByProductId(ProductEntity productByProductId) {
-        this.productByProductId = productByProductId;
-    }
-
-    public Collection<BidEntity> getBidsByAuctionId() {
-        return bidsByAuctionId;
-    }
-
-    public void setBidsByAuctionId(Collection<BidEntity> bidsByAuctionId) {
-        this.bidsByAuctionId = bidsByAuctionId;
+        int result;
+        long temp;
+        result = auctionId;
+        result = 31 * result + productId;
+        temp = Double.doubleToLongBits(startingPrice);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (winner != null ? winner.hashCode() : 0);
+        result = 31 * result + (date != null ? date.hashCode() : 0);
+        return result;
     }
 }

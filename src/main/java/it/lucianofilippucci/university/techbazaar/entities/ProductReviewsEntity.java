@@ -2,8 +2,6 @@ package it.lucianofilippucci.university.techbazaar.entities;
 
 import jakarta.persistence.*;
 
-import java.util.Objects;
-
 @Entity
 @Table(name = "product_reviews", schema = "techbazaar", catalog = "")
 public class ProductReviewsEntity {
@@ -15,20 +13,20 @@ public class ProductReviewsEntity {
     @Column(name = "product_id")
     private int productId;
     @Basic
-    @Column(name = "review_ratings")
-    private int reviewRatings;
+    @Column(name = "user_id")
+    private Integer userId;
     @Basic
-    @Column(name = "review_title")
-    private String reviewTitle;
+    @Column(name = "star_count")
+    private int starCount;
     @Basic
-    @Column(name = "review_body")
-    private String reviewBody;
+    @Column(name = "title")
+    private String title;
     @Basic
-    @Column(name = "review_like_counter")
-    private Integer reviewLikeCounter;
-    @ManyToOne
-    @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
-    private ProductEntity productByProductId;
+    @Column(name = "body")
+    private String body;
+    @Basic
+    @Column(name = "likes")
+    private Integer likes;
 
     public int getReviewId() {
         return reviewId;
@@ -46,56 +44,73 @@ public class ProductReviewsEntity {
         this.productId = productId;
     }
 
-    public int getReviewRatings() {
-        return reviewRatings;
+    public Integer getUserId() {
+        return userId;
     }
 
-    public void setReviewRatings(int reviewRatings) {
-        this.reviewRatings = reviewRatings;
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
-    public String getReviewTitle() {
-        return reviewTitle;
+    public int getStarCount() {
+        return starCount;
     }
 
-    public void setReviewTitle(String reviewTitle) {
-        this.reviewTitle = reviewTitle;
+    public void setStarCount(int starCount) {
+        this.starCount = starCount;
     }
 
-    public String getReviewBody() {
-        return reviewBody;
+    public String getTitle() {
+        return title;
     }
 
-    public void setReviewBody(String reviewBody) {
-        this.reviewBody = reviewBody;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public Integer getReviewLikeCounter() {
-        return reviewLikeCounter;
+    public String getBody() {
+        return body;
     }
 
-    public void setReviewLikeCounter(Integer reviewLikeCounter) {
-        this.reviewLikeCounter = reviewLikeCounter;
+    public void setBody(String body) {
+        this.body = body;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         ProductReviewsEntity that = (ProductReviewsEntity) o;
-        return reviewId == that.reviewId && productId == that.productId && reviewRatings == that.reviewRatings && Objects.equals(reviewTitle, that.reviewTitle) && Objects.equals(reviewBody, that.reviewBody) && Objects.equals(reviewLikeCounter, that.reviewLikeCounter);
+
+        if (reviewId != that.reviewId) return false;
+        if (productId != that.productId) return false;
+        if (starCount != that.starCount) return false;
+        if (userId != null ? !userId.equals(that.userId) : that.userId != null) return false;
+        if (title != null ? !title.equals(that.title) : that.title != null) return false;
+        if (body != null ? !body.equals(that.body) : that.body != null) return false;
+        if (likes != null ? !likes.equals(that.likes) : that.likes != null) return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(reviewId, productId, reviewRatings, reviewTitle, reviewBody, reviewLikeCounter);
-    }
-
-    public ProductEntity getProductByProductId() {
-        return productByProductId;
-    }
-
-    public void setProductByProductId(ProductEntity productByProductId) {
-        this.productByProductId = productByProductId;
+        int result = reviewId;
+        result = 31 * result + productId;
+        result = 31 * result + (userId != null ? userId.hashCode() : 0);
+        result = 31 * result + starCount;
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (body != null ? body.hashCode() : 0);
+        result = 31 * result + (likes != null ? likes.hashCode() : 0);
+        return result;
     }
 }

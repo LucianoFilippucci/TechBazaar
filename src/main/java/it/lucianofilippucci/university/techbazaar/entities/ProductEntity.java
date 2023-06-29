@@ -2,17 +2,13 @@ package it.lucianofilippucci.university.techbazaar.entities;
 
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.Objects;
-
 @Entity
 @Table(name = "product", schema = "techbazaar", catalog = "")
 public class ProductEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "product_id")
-    private int productId;
+    @Column(name = "id")
+    private int id;
     @Basic
     @Column(name = "product_name")
     private String productName;
@@ -20,31 +16,31 @@ public class ProductEntity {
     @Column(name = "product_description")
     private String productDescription;
     @Basic
+    @Column(name = "category")
+    private String category;
+    @Basic
     @Column(name = "product_price")
-    private BigDecimal productPrice;
+    private double productPrice;
     @Basic
     @Column(name = "product_quantity")
     private int productQuantity;
     @Basic
-    @Column(name = "product_total_sold")
-    private Integer productTotalSold;
-    @OneToMany(mappedBy = "productByProductId")
-    private Collection<AuctionEntity> auctionsByProductId;
-    @OneToMany(mappedBy = "productByProductId")
-    private Collection<DailyOfferEntity> dailyOffersByProductId;
-    @OneToMany(mappedBy = "productByProductId")
-    private Collection<OrderDetailsEntity> orderDetailsByProductId;
-    @OneToOne(mappedBy = "productByProductId")
-    private ProductResourcesEntity productResourcesByProductId;
-    @OneToMany(mappedBy = "productByProductId")
-    private Collection<ProductReviewsEntity> productReviewsByProductId;
+    @Column(name = "product_total_selt")
+    private Integer productTotalSelt;
 
-    public int getProductId() {
-        return productId;
+    @Basic
+    @Column(name = "store_identifier")
+    private String storeIdentifier;
+
+    public String getStoreIdentifier() { return storeIdentifier; }
+    public void setStoreIdentifier(String storeIdentifier) { this.storeIdentifier = storeIdentifier; }
+
+    public int getId() {
+        return id;
     }
 
-    public void setProductId(int productId) {
-        this.productId = productId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getProductName() {
@@ -63,11 +59,19 @@ public class ProductEntity {
         this.productDescription = productDescription;
     }
 
-    public BigDecimal getProductPrice() {
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public double getProductPrice() {
         return productPrice;
     }
 
-    public void setProductPrice(BigDecimal productPrice) {
+    public void setProductPrice(double productPrice) {
         this.productPrice = productPrice;
     }
 
@@ -79,64 +83,46 @@ public class ProductEntity {
         this.productQuantity = productQuantity;
     }
 
-    public Integer getProductTotalSold() {
-        return productTotalSold;
+    public Integer getProductTotalSelt() {
+        return productTotalSelt;
     }
 
-    public void setProductTotalSold(Integer productTotalSold) {
-        this.productTotalSold = productTotalSold;
+    public void setProductTotalSelt(Integer productTotalSelt) {
+        this.productTotalSelt = productTotalSelt;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         ProductEntity that = (ProductEntity) o;
-        return productId == that.productId && productQuantity == that.productQuantity && Objects.equals(productName, that.productName) && Objects.equals(productDescription, that.productDescription) && Objects.equals(productPrice, that.productPrice) && Objects.equals(productTotalSold, that.productTotalSold);
+
+        if (id != that.id) return false;
+        if (Double.compare(that.productPrice, productPrice) != 0) return false;
+        if (productQuantity != that.productQuantity) return false;
+        if (productName != null ? !productName.equals(that.productName) : that.productName != null) return false;
+        if (productDescription != null ? !productDescription.equals(that.productDescription) : that.productDescription != null)
+            return false;
+        if (category != null ? !category.equals(that.category) : that.category != null) return false;
+        if (productTotalSelt != null ? !productTotalSelt.equals(that.productTotalSelt) : that.productTotalSelt != null)
+            return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(productId, productName, productDescription, productPrice, productQuantity, productTotalSold);
-    }
-
-    public Collection<AuctionEntity> getAuctionsByProductId() {
-        return auctionsByProductId;
-    }
-
-    public void setAuctionsByProductId(Collection<AuctionEntity> auctionsByProductId) {
-        this.auctionsByProductId = auctionsByProductId;
-    }
-
-    public Collection<DailyOfferEntity> getDailyOffersByProductId() {
-        return dailyOffersByProductId;
-    }
-
-    public void setDailyOffersByProductId(Collection<DailyOfferEntity> dailyOffersByProductId) {
-        this.dailyOffersByProductId = dailyOffersByProductId;
-    }
-
-    public Collection<OrderDetailsEntity> getOrderDetailsByProductId() {
-        return orderDetailsByProductId;
-    }
-
-    public void setOrderDetailsByProductId(Collection<OrderDetailsEntity> orderDetailsByProductId) {
-        this.orderDetailsByProductId = orderDetailsByProductId;
-    }
-
-    public ProductResourcesEntity getProductResourcesByProductId() {
-        return productResourcesByProductId;
-    }
-
-    public void setProductResourcesByProductId(ProductResourcesEntity productResourcesByProductId) {
-        this.productResourcesByProductId = productResourcesByProductId;
-    }
-
-    public Collection<ProductReviewsEntity> getProductReviewsByProductId() {
-        return productReviewsByProductId;
-    }
-
-    public void setProductReviewsByProductId(Collection<ProductReviewsEntity> productReviewsByProductId) {
-        this.productReviewsByProductId = productReviewsByProductId;
+        int result;
+        long temp;
+        result = id;
+        result = 31 * result + (productName != null ? productName.hashCode() : 0);
+        result = 31 * result + (productDescription != null ? productDescription.hashCode() : 0);
+        result = 31 * result + (category != null ? category.hashCode() : 0);
+        temp = Double.doubleToLongBits(productPrice);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + productQuantity;
+        result = 31 * result + (productTotalSelt != null ? productTotalSelt.hashCode() : 0);
+        return result;
     }
 }

@@ -8,6 +8,7 @@ public class TechBazaarApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(TechBazaarApplication.class, args);
+        System.out.println("CIAO");
     }
 
 }

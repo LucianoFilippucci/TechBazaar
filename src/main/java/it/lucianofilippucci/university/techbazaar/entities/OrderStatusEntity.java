@@ -2,56 +2,50 @@ package it.lucianofilippucci.university.techbazaar.entities;
 
 import jakarta.persistence.*;
 
-import java.util.Collection;
-import java.util.Objects;
-
 @Entity
 @Table(name = "order_status", schema = "techbazaar", catalog = "")
 public class OrderStatusEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "order_status_type_id")
-    private int orderStatusTypeId;
+    @Column(name = "status_id")
+    private int statusId;
     @Basic
-    @Column(name = "order_status_type")
-    private String orderStatusType;
-    @OneToMany(mappedBy = "orderStatusByOrderStatus")
-    private Collection<OrderEntity> ordersByOrderStatusTypeId;
+    @Column(name = "type")
+    private String type;
 
-    public int getOrderStatusTypeId() {
-        return orderStatusTypeId;
+    public int getStatusId() {
+        return statusId;
     }
 
-    public void setOrderStatusTypeId(int orderStatusTypeId) {
-        this.orderStatusTypeId = orderStatusTypeId;
+    public void setStatusId(int statusId) {
+        this.statusId = statusId;
     }
 
-    public String getOrderStatusType() {
-        return orderStatusType;
+    public String getType() {
+        return type;
     }
 
-    public void setOrderStatusType(String orderStatusType) {
-        this.orderStatusType = orderStatusType;
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         OrderStatusEntity that = (OrderStatusEntity) o;
-        return orderStatusTypeId == that.orderStatusTypeId && Objects.equals(orderStatusType, that.orderStatusType);
+
+        if (statusId != that.statusId) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderStatusTypeId, orderStatusType);
-    }
-
-    public Collection<OrderEntity> getOrdersByOrderStatusTypeId() {
-        return ordersByOrderStatusTypeId;
-    }
-
-    public void setOrdersByOrderStatusTypeId(Collection<OrderEntity> ordersByOrderStatusTypeId) {
-        this.ordersByOrderStatusTypeId = ordersByOrderStatusTypeId;
+        int result = statusId;
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        return result;
     }
 }

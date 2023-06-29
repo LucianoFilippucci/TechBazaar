@@ -2,9 +2,7 @@ package it.lucianofilippucci.university.techbazaar.entities;
 
 import jakarta.persistence.*;
 
-import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.Objects;
+import java.sql.Date;
 
 @Entity
 @Table(name = "order", schema = "techbazaar", catalog = "")
@@ -15,27 +13,25 @@ public class OrderEntity {
     private int orderId;
     @Basic
     @Column(name = "order_date")
-    private Timestamp orderDate;
+    private Date orderDate;
     @Basic
     @Column(name = "order_status")
     private int orderStatus;
     @Basic
+    @Column(name = "user_id")
+    private String userId;
+    @Basic
     @Column(name = "shipping_addr")
     private String shippingAddr;
     @Basic
-    @Column(name = "order_total")
-    private Double orderTotal;
+    @Column(name = "total")
+    private double total;
     @Basic
     @Column(name = "contact_info")
     private String contactInfo;
     @Basic
-    @Column(name = "user_note")
-    private String userNote;
-    @ManyToOne
-    @JoinColumn(name = "order_status", referencedColumnName = "order_status_type_id", nullable = false)
-    private OrderStatusEntity orderStatusByOrderStatus;
-    @OneToMany(mappedBy = "orderByOrderId")
-    private Collection<OrderDetailsEntity> orderDetailsByOrderId;
+    @Column(name = "note")
+    private String note;
 
     public int getOrderId() {
         return orderId;
@@ -45,11 +41,11 @@ public class OrderEntity {
         this.orderId = orderId;
     }
 
-    public Timestamp getOrderDate() {
+    public Date getOrderDate() {
         return orderDate;
     }
 
-    public void setOrderDate(Timestamp orderDate) {
+    public void setOrderDate(Date orderDate) {
         this.orderDate = orderDate;
     }
 
@@ -61,6 +57,14 @@ public class OrderEntity {
         this.orderStatus = orderStatus;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
     public String getShippingAddr() {
         return shippingAddr;
     }
@@ -69,12 +73,12 @@ public class OrderEntity {
         this.shippingAddr = shippingAddr;
     }
 
-    public Double getOrderTotal() {
-        return orderTotal;
+    public double getTotal() {
+        return total;
     }
 
-    public void setOrderTotal(Double orderTotal) {
-        this.orderTotal = orderTotal;
+    public void setTotal(double total) {
+        this.total = total;
     }
 
     public String getContactInfo() {
@@ -85,40 +89,46 @@ public class OrderEntity {
         this.contactInfo = contactInfo;
     }
 
-    public String getUserNote() {
-        return userNote;
+    public String getNote() {
+        return note;
     }
 
-    public void setUserNote(String userNote) {
-        this.userNote = userNote;
+    public void setNote(String note) {
+        this.note = note;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         OrderEntity that = (OrderEntity) o;
-        return orderId == that.orderId && orderStatus == that.orderStatus && Objects.equals(orderDate, that.orderDate) && Objects.equals(shippingAddr, that.shippingAddr) && Objects.equals(orderTotal, that.orderTotal) && Objects.equals(contactInfo, that.contactInfo) && Objects.equals(userNote, that.userNote);
+
+        if (orderId != that.orderId) return false;
+        if (orderStatus != that.orderStatus) return false;
+        if (Double.compare(that.total, total) != 0) return false;
+        if (orderDate != null ? !orderDate.equals(that.orderDate) : that.orderDate != null) return false;
+        if (userId != null ? !userId.equals(that.userId) : that.userId != null) return false;
+        if (shippingAddr != null ? !shippingAddr.equals(that.shippingAddr) : that.shippingAddr != null) return false;
+        if (contactInfo != null ? !contactInfo.equals(that.contactInfo) : that.contactInfo != null) return false;
+        if (note != null ? !note.equals(that.note) : that.note != null) return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderId, orderDate, orderStatus, shippingAddr, orderTotal, contactInfo, userNote);
-    }
-
-    public OrderStatusEntity getOrderStatusByOrderStatus() {
-        return orderStatusByOrderStatus;
-    }
-
-    public void setOrderStatusByOrderStatus(OrderStatusEntity orderStatusByOrderStatus) {
-        this.orderStatusByOrderStatus = orderStatusByOrderStatus;
-    }
-
-    public Collection<OrderDetailsEntity> getOrderDetailsByOrderId() {
-        return orderDetailsByOrderId;
-    }
-
-    public void setOrderDetailsByOrderId(Collection<OrderDetailsEntity> orderDetailsByOrderId) {
-        this.orderDetailsByOrderId = orderDetailsByOrderId;
+        int result;
+        long temp;
+        result = orderId;
+        result = 31 * result + (orderDate != null ? orderDate.hashCode() : 0);
+        result = 31 * result + orderStatus;
+        result = 31 * result + (userId != null ? userId.hashCode() : 0);
+        result = 31 * result + (shippingAddr != null ? shippingAddr.hashCode() : 0);
+        temp = Double.doubleToLongBits(total);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (contactInfo != null ? contactInfo.hashCode() : 0);
+        result = 31 * result + (note != null ? note.hashCode() : 0);
+        return result;
     }
 }

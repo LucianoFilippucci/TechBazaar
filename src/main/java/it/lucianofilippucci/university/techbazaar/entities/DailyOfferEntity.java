@@ -2,35 +2,31 @@ package it.lucianofilippucci.university.techbazaar.entities;
 
 import jakarta.persistence.*;
 
-import java.sql.Timestamp;
-import java.util.Objects;
+import java.sql.Date;
 
 @Entity
 @Table(name = "daily_offer", schema = "techbazaar", catalog = "")
 public class DailyOfferEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "daily_offer_id")
-    private int dailyOfferId;
+    @Column(name = "daily_id")
+    private int dailyId;
     @Basic
     @Column(name = "product_id")
     private int productId;
     @Basic
-    @Column(name = "offer_discount")
-    private int offerDiscount;
+    @Column(name = "discount")
+    private int discount;
     @Basic
-    @Column(name = "offer_date")
-    private Timestamp offerDate;
-    @ManyToOne
-    @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
-    private ProductEntity productByProductId;
+    @Column(name = "date")
+    private Date date;
 
-    public int getDailyOfferId() {
-        return dailyOfferId;
+    public int getDailyId() {
+        return dailyId;
     }
 
-    public void setDailyOfferId(int dailyOfferId) {
-        this.dailyOfferId = dailyOfferId;
+    public void setDailyId(int dailyId) {
+        this.dailyId = dailyId;
     }
 
     public int getProductId() {
@@ -41,40 +37,43 @@ public class DailyOfferEntity {
         this.productId = productId;
     }
 
-    public int getOfferDiscount() {
-        return offerDiscount;
+    public int getDiscount() {
+        return discount;
     }
 
-    public void setOfferDiscount(int offerDiscount) {
-        this.offerDiscount = offerDiscount;
+    public void setDiscount(int discount) {
+        this.discount = discount;
     }
 
-    public Timestamp getOfferDate() {
-        return offerDate;
+    public Date getDate() {
+        return date;
     }
 
-    public void setOfferDate(Timestamp offerDate) {
-        this.offerDate = offerDate;
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         DailyOfferEntity that = (DailyOfferEntity) o;
-        return dailyOfferId == that.dailyOfferId && productId == that.productId && offerDiscount == that.offerDiscount && Objects.equals(offerDate, that.offerDate);
+
+        if (dailyId != that.dailyId) return false;
+        if (productId != that.productId) return false;
+        if (discount != that.discount) return false;
+        if (date != null ? !date.equals(that.date) : that.date != null) return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dailyOfferId, productId, offerDiscount, offerDate);
-    }
-
-    public ProductEntity getProductByProductId() {
-        return productByProductId;
-    }
-
-    public void setProductByProductId(ProductEntity productByProductId) {
-        this.productByProductId = productByProductId;
+        int result = dailyId;
+        result = 31 * result + productId;
+        result = 31 * result + discount;
+        result = 31 * result + (date != null ? date.hashCode() : 0);
+        return result;
     }
 }
