@@ -34,6 +34,8 @@ public class TelegramSender extends TelegramLongPollingBot {
     }
 
     public void sendMessageToUser(String messageText) {
+        System.out.println(messageText);
+
         // Crea il messaggio da inviare
         SendMessage message = new SendMessage(chatId, messageText);
 

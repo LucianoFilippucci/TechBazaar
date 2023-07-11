@@ -3,20 +3,15 @@ package it.lucianofilippucci.university.techbazaar.helpers;
 import lombok.Getter;
 
 @Getter
-public class ResponseMessage<T> {
-    private String message;
+public class ResponseMessage<String> {
+    private final String message;
     private boolean isError;
-    private T object;
 
     public ResponseMessage(String text) {
         this.message = text;
     }
 
-    public ResponseMessage (T object) {
-        this.object = object;
-    }
-
-    public ResponseMessage<T> setIsError(boolean isError) {
+    public ResponseMessage<String> setIsError(boolean isError) {
         this.isError = isError;
         return this;
     }

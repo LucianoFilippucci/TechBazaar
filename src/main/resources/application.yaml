@@ -6,5 +6,18 @@ spring:
     password: '@MeRk998#_'
     username: 'root'
     driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/techbazaar
+
+
 telegram:
   botToken: 6253243192:AAFtw6MHC3AswmLJrKUeNNkKKjcQzaTxgAY
+dropbox:
+  appKey: m8fve1waed51i2n
+  appSecret: zuvwv6f6rr5wnl0
+  accessToken: sl.Bhi149aSyx6oaYnYRmgF4_lqN6d6U9W_kQIM7oTH4VWIuWWIYPNaYm4GGKKMBd371H_l5hiFPzZeOTxxk2lUDcQRulPusikWwIH4uuS9qUU3Zg4BXS3UIZZhBMfyKNmd4CIMpI0
+
+server:
+  port: '8081'
+

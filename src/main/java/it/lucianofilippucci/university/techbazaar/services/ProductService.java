@@ -1,15 +1,18 @@
 package it.lucianofilippucci.university.techbazaar.services;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
+import it.lucianofilippucci.university.techbazaar.helpers.DropboxHelper;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.NotAuthorizedException;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
+import it.lucianofilippucci.university.techbazaar.helpers.FilePathType;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
 import it.lucianofilippucci.university.techbazaar.helpers.TelegramSender;
 import it.lucianofilippucci.university.techbazaar.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,26 +26,31 @@ public class ProductService {
     @Autowired
     private TelegramSender telegramSender;
 
-    @Transactional(readOnly = true)
-    public ProductEntity getById(int id){ return productRepository.findProductById(id);}
+    @Autowired
+    private DropboxHelper helper;
 
     @Transactional(readOnly = true)
-    public List<ProductEntity> getAllProducts() {return productRepository.findAll(); }
+    public ProductEntity getById(int id){ return productRepository.findByProductId(id);}
+
+    @Transactional(readOnly = true)
+    public List<ProductEntity> getAllProducts() {
+        return productRepository.findAll();
+    }
 
     @Transactional
-    public void newProduct(ProductEntity pe) { productRepository.save(pe); }
+    public ProductEntity newProduct(ProductEntity pe) { return productRepository.save(pe); }
 
     @Transactional
-    public ResponseMessage<String> editProduct(Product product) {
-        Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findProductById(product.getId()));
+    public ResponseMessage<String> editProduct(ProductEntity product) {
+        Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(product.getProductId()));
         if(productEntity.isPresent()) {
+
             ProductEntity updatedEntity = productEntity.get();
-            updatedEntity.setProductPrice(product.getPrice());
-            updatedEntity.setProductName(product.getName());
-            updatedEntity.setProductQuantity(product.getQty());
-            updatedEntity.setStoreIdentifier(product.getStoreId());
-            updatedEntity.setCategory(product.getCategory());
-            updatedEntity.setProductDescription(product.getDescription());
+            updatedEntity.setProductPrice(product.getProductPrice());
+            updatedEntity.setProductName(product.getProductName());
+            updatedEntity.setProductQuantity(product.getProductQuantity());
+            updatedEntity.setProductCategory(product.getProductCategory());
+            updatedEntity.setProductDescription(product.getProductDescription());
 
             productRepository.save(updatedEntity);
             return new ResponseMessage<>("Product Saved Correctly");
@@ -53,10 +61,10 @@ public class ProductService {
     @Transactional
     public ResponseMessage deleteProduct(int id, String storeId) throws NotAuthorizedException {
         try {
-            Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findProductById(id));
+            Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(id));
             if (productEntity.isPresent()) {
                 ProductEntity removed = productEntity.get();
-                if (!removed.getStoreIdentifier().equals(storeId))
+                if (!removed.getStore().getStoreId().equals(storeId))
                     throw new NotAuthorizedException();
                 productRepository.delete(removed);
 
@@ -84,5 +92,9 @@ public class ProductService {
             products.add(new Product(entity));
         }
         return products;
+    }
+
+    public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, String storeId) {
+        return helper.upload(files, productId, FilePathType.STORE_PRODUCT, storeId);
     }
 }

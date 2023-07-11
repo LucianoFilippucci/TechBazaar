@@ -1,6 +1,7 @@
 package it.lucianofilippucci.university.techbazaar.helpers.Entities;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
+import it.lucianofilippucci.university.techbazaar.entities.StoreEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,17 +19,17 @@ public class Product {
     private String category;
     private float price;
     private int qty;
-    private String storeId;
+    private StoreEntity store;
 
     public Product(ProductEntity entity) throws ProductIdNotFound {
         if(entity == null) throw new ProductIdNotFound(); // ????????????????
-        this.id = entity.getId();
+        this.id = entity.getProductId();
         this.name = entity.getProductName();
         this.description = entity.getProductDescription();
         this.category = "";
         this.price = (float) entity.getProductPrice();
         this.qty = entity.getProductQuantity();
-        this.storeId = entity.getStoreIdentifier();
+        this.store = entity.getStore();
     }
 
     public Product() {

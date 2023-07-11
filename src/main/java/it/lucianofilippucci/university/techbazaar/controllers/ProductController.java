@@ -6,14 +6,16 @@ import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.NotAuthoriz
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
 import it.lucianofilippucci.university.techbazaar.helpers.TelegramSender;
+import it.lucianofilippucci.university.techbazaar.services.ProductReviewService;
 import it.lucianofilippucci.university.techbazaar.services.ProductService;
+import it.lucianofilippucci.university.techbazaar.services.StoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,12 @@ public class ProductController {
 
     @Autowired
     TelegramSender telegramSender;
+
+    @Autowired
+    ProductReviewService productReviewService;
+
+    @Autowired
+    StoreService storeService;
 
     @GetMapping
     public List<Product> getAll() throws ProductIdNotFound {
@@ -55,7 +63,7 @@ public class ProductController {
     }
 
     @PostMapping("/{id}/edit")
-    public ResponseEntity<ResponseMessage> editProduct(@RequestBody Product product) {
+    public ResponseEntity<ResponseMessage<String>> editProduct(@RequestBody ProductEntity product) {
         ResponseMessage<String> responseMessage = new ResponseMessage<>("");
         try{
             responseMessage = productService.editProduct(product);
@@ -64,7 +72,7 @@ public class ProductController {
             telegramSender.sendMessageToUser("ERROR FROM CLASS " + this.getClass().getName() + " ON editProduct()\n WITH EXCEPTION DataAccessException");
             telegramSender.sendMessageToUser(dae.getMessage());
             telegramSender.sendMessageToUser(responseMessage.getMessage());
-            return new ResponseEntity<>(responseMessage.setIsError(true), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<ResponseMessage<String>>(responseMessage.setIsError(true), HttpStatus.BAD_REQUEST);
         }
 
     }
@@ -82,23 +90,53 @@ public class ProductController {
     }
 
     @PostMapping("/new")
-    public ResponseEntity<ResponseMessage> newProduct(@RequestBody Product product) {
+    public ResponseEntity<ResponseMessage<String>> newProduct(
+            @RequestParam("name") String name,
+            @RequestParam("description") String description,
+            @RequestParam("category") String category,
+            @RequestParam("price") float price,
+            @RequestParam("qty") int qty,
+            @RequestParam("storeId") String storeId,
+            @RequestParam(value = "files", required = false) MultipartFile[] files
+    ) {
         ProductEntity productEntity = new ProductEntity();
-        productEntity.setProductPrice(product.getPrice());
-        productEntity.setProductName(product.getName());
-        productEntity.setProductQuantity(product.getQty());
-        productEntity.setStoreIdentifier(product.getStoreId());
-        productEntity.setCategory(product.getCategory());
-
-
-        productEntity.setProductDescription(product.getDescription());
+        productEntity.setProductPrice(price);
+        productEntity.setProductName(name);
+        productEntity.setProductQuantity(qty);
+        productEntity.setStore(storeService.getStoreById(storeId));
+        productEntity.setProductCategory(category);
+        productEntity.setProductDescription(description);
 
         try {
-            productService.newProduct(productEntity);
+            ProductEntity pe = productService.newProduct(productEntity);
+            if(files != null && files.length > 0)
+                return new ResponseEntity<>(productService.uploadFiles(files, pe.getProductId(), pe.getStore().getStoreId()), HttpStatus.OK);
+            return new ResponseEntity<>(new ResponseMessage<>("Product Correctly saved Without Any Image.").setIsError(false), HttpStatus.OK);
         } catch(DataAccessException dae) {
             telegramSender.sendMessageToUser("ERROR FROM CLASS " + this.getClass().getName() + "ON newProduct()\n WITH EXCEPTION DataAccessException");
             telegramSender.sendMessageToUser(dae.getMessage());
+            return new ResponseEntity<>(new ResponseMessage<>("WOWOWOWO PROBLEMI").setIsError(true), HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(new ResponseMessage("yay").setIsError(false), HttpStatus.OK);
+    }
+
+    @PostMapping("/{id}/review/new")
+    public ResponseEntity<ResponseMessage<String>> fileUpload(@PathVariable("id") int id, @RequestParam("files")MultipartFile[] files) {
+        if(files.length > 0) {
+            ProductEntity productEntity = productService.getById(id);
+            return new ResponseEntity<>(productReviewService.uploadFiles(files, id, productEntity.getStore().getStoreId()), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ResponseMessage<>("No files received."), HttpStatus.OK);
+    }
+
+
+
+    @PostMapping("/{id}/review/new/upload")
+    public ResponseEntity<ResponseMessage<String>> uploadReviewFile(@PathVariable("id") int id, @RequestParam("files") MultipartFile[] files) {
+        ResponseMessage<String> response = new ResponseMessage<>("No files Uploaded.");
+        if(files.length > 0) {
+            ProductEntity productEntity = productService.getById(id);
+            response = productReviewService.uploadFiles(files, id, productEntity.getStore().getStoreId());
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

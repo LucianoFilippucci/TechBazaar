@@ -1,79 +1,39 @@
 package it.lucianofilippucci.university.techbazaar.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.sql.Date;
+import java.util.Date;
 
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 @Entity
-@Table(name = "daily_offer", schema = "techbazaar", catalog = "")
+@Table(name = "daily_offer", schema = "techbazaar")
 public class DailyOfferEntity {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "daily_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "daily_id", nullable = false)
     private int dailyId;
+
     @Basic
-    @Column(name = "product_id")
-    private int productId;
-    @Basic
-    @Column(name = "discount")
+    @Column(name = "discount", nullable = false)
     private int discount;
+
     @Basic
-    @Column(name = "date")
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "date", nullable = false)
+    @CreationTimestamp
     private Date date;
 
-    public int getDailyId() {
-        return dailyId;
-    }
-
-    public void setDailyId(int dailyId) {
-        this.dailyId = dailyId;
-    }
-
-    public int getProductId() {
-        return productId;
-    }
-
-    public void setProductId(int productId) {
-        this.productId = productId;
-    }
-
-    public int getDiscount() {
-        return discount;
-    }
-
-    public void setDiscount(int discount) {
-        this.discount = discount;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        DailyOfferEntity that = (DailyOfferEntity) o;
-
-        if (dailyId != that.dailyId) return false;
-        if (productId != that.productId) return false;
-        if (discount != that.discount) return false;
-        if (date != null ? !date.equals(that.date) : that.date != null) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = dailyId;
-        result = 31 * result + productId;
-        result = 31 * result + discount;
-        result = 31 * result + (date != null ? date.hashCode() : 0);
-        return result;
-    }
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    @JsonIgnore
+    private ProductEntity product;
 }
