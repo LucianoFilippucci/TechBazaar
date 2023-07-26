@@ -1,4 +1,4 @@
-//package it.lucianofilippucci.university.techbazaar.entities;
+package it.lucianofilippucci.university.techbazaar.entities;//package it.lucianofilippucci.university.techbazaar.entities;
 //
 //import com.fasterxml.jackson.annotation.JsonIgnore;
 //import jakarta.persistence.*;
