@@ -11,7 +11,7 @@ This with ResponseEntity.HttpStatus can give you info about the error.
 |------------------------------------------------------|-----------------------------|-------------|-------|
 | [/user/cart](#usercart)                              | Get User Cart ID            |             | GET   |
 | [/user/cart/add](#usercartadd)                       | Add Element to Cart         |             | POST  |
-| [/user/cart/update-element](#usercartupdate-element) | Update Single Cart Element  |             | POSRT |
+| [/user/cart/update-element](#usercartupdate-element) | Update Single Cart Element  |             | POST |
 | [/user/cart/place-order](#usercartplace-order)       | Complete Order and place it |             | POST  |
 
 
