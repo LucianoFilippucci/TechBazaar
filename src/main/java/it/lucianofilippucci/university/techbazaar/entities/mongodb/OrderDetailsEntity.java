@@ -23,5 +23,5 @@ public class OrderDetailsEntity {
     private List<ProductInPurchase> productInPurchases;
     private float total;
 
-    private int orderId;
+    private String orderId;
 }

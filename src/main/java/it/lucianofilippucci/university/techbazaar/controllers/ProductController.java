@@ -39,7 +39,7 @@ public class ProductController {
     public List<Product> getAll() throws ProductIdNotFound {
         List<ProductEntity> products = productService.getAllProducts();
         ArrayList<Product> result = new ArrayList<Product>();
-        if(products.size() > 0) {
+        if(!products.isEmpty()) {
            for(ProductEntity pe : products) {
                result.add(new Product(pe));
            }
@@ -52,14 +52,12 @@ public class ProductController {
         return productService.getContainingKeywords(keyword);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ResponseMessage> getProduct(@PathVariable("id") int id) {
-        try{
-            Product product = new Product(productService.getById(id));
-            return new ResponseEntity<>(new ResponseMessage<>(product).setIsError(false), HttpStatus.OK);
-        } catch (ProductIdNotFound pidnf) {
-            return new ResponseEntity<>(new ResponseMessage<>("The product with id [" + id + "] couldn't be found").setIsError(true), HttpStatus.BAD_REQUEST);
-        }
+    @GetMapping("/single-item")
+    public ResponseEntity<ResponseMessage> getProduct(@RequestParam("productId") int id) {
+
+        Product product = new Product(productService.getById(id));
+        return new ResponseEntity<>(new ResponseMessage<>(product).setIsError(false), HttpStatus.OK);
+
     }
 
     @PostMapping("/{id}/edit")

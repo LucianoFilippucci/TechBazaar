@@ -21,8 +21,10 @@ public class Product {
     private int qty;
     private StoreEntity store;
 
-    public Product(ProductEntity entity) throws ProductIdNotFound {
-        if(entity == null) throw new ProductIdNotFound(); // ????????????????
+    private int productQty; //needed only in Order.
+
+
+    public Product(ProductEntity entity) {
         this.id = entity.getProductId();
         this.name = entity.getProductName();
         this.description = entity.getProductDescription();

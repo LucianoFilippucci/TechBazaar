@@ -1,16 +1,21 @@
 package it.lucianofilippucci.university.techbazaar.services;
 
 import it.lucianofilippucci.university.techbazaar.entities.OrderEntity;
+import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
+import it.lucianofilippucci.university.techbazaar.entities.mongodb.OrderDetailsEntity;
+import it.lucianofilippucci.university.techbazaar.helpers.Entities.Order;
+import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
+import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductInPurchase;
 import it.lucianofilippucci.university.techbazaar.helpers.Helpers;
+import it.lucianofilippucci.university.techbazaar.helpers.EverythingServices;
 import it.lucianofilippucci.university.techbazaar.repositories.OrderRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.OrderDetailsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -20,11 +25,55 @@ public class OrderService {
     @Autowired
     OrderDetailsRepository orderDetailsRepository;
 
+    @Autowired
+    EverythingServices everythingServices;
+
     @Transactional(readOnly = true)
-    public List<OrderEntity> getAllUserOrders(int userId) {
+    public List<Order> getAllUserOrders(int userId) {
         UserEntity entity = new UserEntity();
         entity.setUserId(userId);
-        return orderRepository.findOrderEntitiesByUser(entity);
+        List<OrderEntity> list =  orderRepository.findOrderEntitiesByUser(entity);
+
+        LinkedList<Order> orderList = new LinkedList<>();
+
+        for(OrderEntity order : list) {
+            OrderDetailsEntity detail = everythingServices.getOrderDetail(order.getOrderId());
+            if(detail != null) {
+
+                LinkedList<Product> productInList = new LinkedList<>();
+                // Aggiungere Qualcosa per mostrare i dati di ProductInPurchase
+                for(ProductInPurchase pip : detail.getProductInPurchases()) {
+                    Product p = new Product(everythingServices.getProduct(pip.getProductId()));
+                    p.setQty(pip.getProductQuantity());
+                    p.setPrice(pip.getUnitaryPrice());
+                    productInList.add(p);
+                }
+                Date today = new Date();
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(today);
+
+                Calendar calendar1 = Calendar.getInstance();
+                calendar1.setTime(order.getDate());
+                calendar1.add(Calendar.DAY_OF_MONTH, 31);
+                System.out.println(calendar);
+                System.out.println(calendar1);
+
+                Order o = new Order(
+                        order.getOrderId(),
+                        order.getDate(),
+                        order.getShippingAddr(),
+                        order.getOrderTotal(),
+                        order.getOrderStatus(),
+                        order.getTrackingCode(),
+                        order.getExpressCourier(),
+                        productInList,
+                        !calendar.after(calendar1)
+                );
+                orderList.add(o);
+            }
+
+        }
+        return orderList;
     }
 
     @Transactional

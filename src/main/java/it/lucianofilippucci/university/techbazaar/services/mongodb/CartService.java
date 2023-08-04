@@ -6,9 +6,11 @@ import it.lucianofilippucci.university.techbazaar.entities.UserAddressEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.CartEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.OrderDetailsEntity;
+import it.lucianofilippucci.university.techbazaar.helpers.CartResponse;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductInPurchase;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductQuantityUnavailableException;
 import it.lucianofilippucci.university.techbazaar.helpers.Helpers;
+import it.lucianofilippucci.university.techbazaar.helpers.ProductInCart;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
 import it.lucianofilippucci.university.techbazaar.repositories.OrderRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.UserAddressRepository;
@@ -59,8 +61,21 @@ public class CartService {
     }
 
     @Transactional
-    public CartEntity getCart(String cartId) {
-        return cartRepository.findById(cartId).get();
+    public CartResponse getCart(String cartId) {
+        CartEntity entity = cartRepository.findById(cartId).get();
+        List<ProductInCart> cartProducts = new LinkedList<>();
+        float cartTotal = 0f;
+        float taxTotal = 0f;
+
+        for(Map.Entry<Integer, Integer> entry : entity.getProductsInCart().entrySet()) {
+            ProductEntity product = productService.getById(entry.getKey());
+            cartTotal += product.getProductPrice() * entry.getValue();
+            ProductInCart pic = new ProductInCart(entry.getKey(), product.getProductPrice(), product.getProductName(), entry.getValue());
+            cartProducts.add(pic);
+        }
+
+        taxTotal = (float) (cartTotal * 0.22);
+        return new CartResponse(cartTotal, taxTotal, cartProducts);
     }
 
     @Transactional
@@ -147,6 +162,8 @@ public class CartService {
         orderDetails.setProductInPurchases(productInPurchases);
 
         order.setOrderId(Helpers.GenerateUID());
+
+        orderDetails.setOrderId(order.getOrderId());
         order.setOrderTotal(totalPrice);
         order.setDate(new Date());
         UserAddressEntity userAddress = userAddressRepository.findById(userAddressId).get();

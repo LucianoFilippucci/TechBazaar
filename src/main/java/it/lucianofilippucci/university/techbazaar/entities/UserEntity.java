@@ -2,18 +2,18 @@ package it.lucianofilippucci.university.techbazaar.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
+@NoArgsConstructor
 @Entity
 @Table(name = "user", schema = "techbazaar")
 public class UserEntity {
@@ -46,4 +46,13 @@ public class UserEntity {
     @JsonIgnore
     private Collection<UserAddressEntity> userAddressEntities;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
+
+    public UserEntity(String username, String email, String encode) {
+        this.username = username;
+        this.email = email;
+        this.password = encode;
+    }
 }
