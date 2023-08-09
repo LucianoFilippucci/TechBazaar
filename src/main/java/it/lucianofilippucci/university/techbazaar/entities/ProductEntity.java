@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
@@ -53,9 +54,9 @@ public class ProductEntity {
     @JsonIgnore
     private StoreEntity store;
 
-    @OneToMany
+    @OneToMany(mappedBy = "product")
     @JsonIgnore
-    private Collection<ProductReviewsEntity> reviews;
+    private List<ProductReviewsEntity> reviews;
 
     @OneToMany
     @JsonIgnore

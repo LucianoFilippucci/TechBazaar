@@ -1,5 +1,6 @@
 package it.lucianofilippucci.university.techbazaar.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,7 +40,8 @@ public class ProductReviewsEntity {
     @Column(name = "likes")
     private int likes;
 
-    @ManyToOne
+    @ManyToOne()
     @JoinColumn(name = "product_id")
+    @JsonIgnore
     private ProductEntity product;
 }
