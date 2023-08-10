@@ -6,6 +6,9 @@ import it.lucianofilippucci.university.techbazaar.helpers.Helpers;
 import it.lucianofilippucci.university.techbazaar.repositories.UserAddressRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -36,6 +39,11 @@ public class UserService implements UserDetailsService {
                 user.getPassword(),
                 new ArrayList<>()
         );
+    }
+
+    @Transactional
+    public Optional<UserEntity> getById(int userId) {
+       return this.userRepository.findUserEntityByUserId(userId);
     }
 
     @Transactional

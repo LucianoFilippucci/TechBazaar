@@ -74,7 +74,7 @@ public class SecurityConfiguration  {
                                 .requestMatchers("/product/single-item").permitAll()
                                 .requestMatchers("/product").permitAll()
                                 .requestMatchers("/product/search/**").permitAll()
-                                .requestMatchers("/product/review").permitAll()
+                                .requestMatchers("/product/reviews").permitAll()
                                 .anyRequest().authenticated())
                 .cors(cors -> corsConfigurationSource());
         http.authenticationProvider(authenticationProvider());

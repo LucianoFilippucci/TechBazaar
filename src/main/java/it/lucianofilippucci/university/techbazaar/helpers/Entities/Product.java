@@ -24,7 +24,6 @@ public class Product {
     private float price;
     private int qty;
     private StoreEntity store;
-    private List<ProductReviewsEntity> reviews;
     private int productQty; //needed only in Order.
 
 
@@ -36,7 +35,6 @@ public class Product {
         this.price = (float) entity.getProductPrice();
         this.qty = entity.getProductQuantity();
         this.store = entity.getStore();
-        this.reviews = entity.getReviews();
     }
 
     public Product() {

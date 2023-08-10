@@ -1,6 +1,7 @@
 package it.lucianofilippucci.university.techbazaar.controllers;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
+import it.lucianofilippucci.university.techbazaar.helpers.Entities.NewReviewRequest;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.NotAuthorizedException;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
@@ -9,6 +10,7 @@ import it.lucianofilippucci.university.techbazaar.helpers.TelegramSender;
 import it.lucianofilippucci.university.techbazaar.services.ProductReviewService;
 import it.lucianofilippucci.university.techbazaar.services.ProductService;
 import it.lucianofilippucci.university.techbazaar.services.StoreService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -117,24 +119,5 @@ public class ProductController {
         }
     }
 
-    @PostMapping("/{id}/review/new")
-    public ResponseEntity<ResponseMessage<String>> fileUpload(@PathVariable("id") int id, @RequestParam("files")MultipartFile[] files) {
-        if(files.length > 0) {
-            ProductEntity productEntity = productService.getById(id);
-            return new ResponseEntity<>(productReviewService.uploadFiles(files, id, productEntity.getStore().getStoreId()), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(new ResponseMessage<>("No files received."), HttpStatus.OK);
-    }
 
-
-
-    @PostMapping("/{id}/review/new/upload")
-    public ResponseEntity<ResponseMessage<String>> uploadReviewFile(@PathVariable("id") int id, @RequestParam("files") MultipartFile[] files) {
-        ResponseMessage<String> response = new ResponseMessage<>("No files Uploaded.");
-        if(files.length > 0) {
-            ProductEntity productEntity = productService.getById(id);
-            response = productReviewService.uploadFiles(files, id, productEntity.getStore().getStoreId());
-        }
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
 }

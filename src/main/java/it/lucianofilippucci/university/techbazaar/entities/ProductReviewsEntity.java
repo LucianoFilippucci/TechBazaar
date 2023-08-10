@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @EqualsAndHashCode
@@ -20,9 +22,9 @@ public class ProductReviewsEntity {
     @Column(name = "review_id", nullable = false)
     private int reviewId;
 
-    @Basic
-    @Column(name = "user_id", nullable = true)
-    private int userId;
+    @ManyToOne()
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
     @Basic
     @Column(name = "star_count", nullable = false)
@@ -39,6 +41,10 @@ public class ProductReviewsEntity {
     @Basic
     @Column(name = "likes")
     private int likes;
+
+    @Basic
+    @Column(name = "date")
+    private Date date;
 
     @ManyToOne()
     @JoinColumn(name = "product_id")

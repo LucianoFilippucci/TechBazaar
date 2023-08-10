@@ -59,7 +59,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ResponseMessage deleteProduct(int id, String storeId) throws NotAuthorizedException {
+    public ResponseMessage<String> deleteProduct(int id, String storeId) throws NotAuthorizedException {
         try {
             Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(id));
             if (productEntity.isPresent()) {

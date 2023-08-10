@@ -29,6 +29,7 @@ public class UserEntity {
 
     @Basic
     @Column(name = "password", nullable = false, length = 45)
+    @JsonIgnore
     private String password;
 
     @Basic
@@ -45,6 +46,10 @@ public class UserEntity {
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private Collection<UserAddressEntity> userAddressEntities;
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private Collection<ProductReviewsEntity> reviews;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
