@@ -14,5 +14,6 @@ public class ProductInCart {
     private float productPrice;
     private String productName;
     private int productQty;
+    private String category;
     //TODO: add imgs
 }

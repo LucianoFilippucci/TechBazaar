@@ -4,6 +4,7 @@ import it.lucianofilippucci.university.techbazaar.entities.OrderEntity;
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.OrderDetailsEntity;
+import it.lucianofilippucci.university.techbazaar.entities.mongodb.StoreOrderEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Order;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductInPurchase;
@@ -11,6 +12,7 @@ import it.lucianofilippucci.university.techbazaar.helpers.Helpers;
 import it.lucianofilippucci.university.techbazaar.helpers.EverythingServices;
 import it.lucianofilippucci.university.techbazaar.repositories.OrderRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.OrderDetailsRepository;
+import it.lucianofilippucci.university.techbazaar.repositories.mongodb.StoreOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,9 @@ public class OrderService {
 
     @Autowired
     EverythingServices everythingServices;
+
+    @Autowired
+    StoreOrderRepository storeOrderRepository;
 
     @Transactional(readOnly = true)
     public List<Order> getAllUserOrders(int userId) {
@@ -87,5 +92,9 @@ public class OrderService {
             return true;
         }
         return false;
+    }
+
+    public List<StoreOrderEntity> getStoreOrders(int storeId) {
+        return this.storeOrderRepository.findStoreOrderEntitiesByStoreId(storeId);
     }
 }

@@ -82,7 +82,7 @@ public class ProductReviewService {
         return p.getProduct().getProductId() != 0;
     }
 
-    public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, String storeId) {
+    public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, int storeId) {
         return dropboxHelper.upload(files, productId, FilePathType.PRODUCT_REVIEW, storeId);
     }
 

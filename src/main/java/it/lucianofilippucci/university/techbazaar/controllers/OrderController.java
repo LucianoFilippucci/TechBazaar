@@ -1,6 +1,7 @@
 package it.lucianofilippucci.university.techbazaar.controllers;
 
 import it.lucianofilippucci.university.techbazaar.entities.OrderEntity;
+import it.lucianofilippucci.university.techbazaar.entities.mongodb.StoreOrderEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Order;
 import it.lucianofilippucci.university.techbazaar.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,5 +24,11 @@ public class OrderController {
     @GetMapping
     public List<Order> getAllUserOrder(@RequestParam("userId") int userId) {
         return orderService.getAllUserOrders(userId);
+    }
+
+    @PreAuthorize("hasRole('STORE')")
+    @GetMapping("/store")
+    public List<StoreOrderEntity> getAllStoreOrders(@RequestParam("storeId") int storeId) {
+        return this.orderService.getStoreOrders(storeId);
     }
 }

@@ -26,7 +26,7 @@ public class DropboxHelper {
         this.telegramSender = sender;
     }
 
-    public ResponseMessage<String> upload(MultipartFile[] files, int productId, FilePathType filePathType , String storeId) {
+    public ResponseMessage<String> upload(MultipartFile[] files, int productId, FilePathType filePathType , int storeId) {
         try {
             for(MultipartFile file : files) {
                 String originalFileName = file.getOriginalFilename();

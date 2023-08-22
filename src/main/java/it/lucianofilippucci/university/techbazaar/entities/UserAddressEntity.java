@@ -6,7 +6,6 @@ import lombok.*;
 @Getter
 @Setter
 @EqualsAndHashCode
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -50,6 +49,11 @@ public class UserAddressEntity {
     public enum AddressState {
         ITALY,
         USA
+    }
+
+    @Override
+    public String toString() {
+        return this.via + ", " + this.civico + ", " + this.provincia + ", " + this.addressState;
     }
 
 }

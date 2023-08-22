@@ -1,11 +1,14 @@
 package it.lucianofilippucci.university.techbazaar.controllers;
 
+import it.lucianofilippucci.university.techbazaar.entities.CouponEntity;
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.Role;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.CartEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.*;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductQuantityUnavailableException;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.NotAuthorizedException;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.StoreNotFound;
 import it.lucianofilippucci.university.techbazaar.helpers.model.ERole;
 import it.lucianofilippucci.university.techbazaar.repositories.RoleRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.UserRepository;
@@ -27,9 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -77,6 +78,8 @@ public class UserController {
         return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles, userDetails.getCartId()));
     }
 
+    @GetMapping("/")
+
     @PostMapping("/auth/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest request) {
         if(userRepository.existsByUsername(request.getUsername())) {
@@ -86,13 +89,28 @@ public class UserController {
             return ResponseEntity.badRequest().body(new ResponseMessage<String>("Email already exist"));
         }
 
+        Set<String> role = request.getRole();
+
         Set<Role> roles = new HashSet<>();
 
         UserEntity user = new UserEntity(request.getUsername(), request.getEmail(), encoder.encode(request.getPassword()));
-        Role userRole = roleRepository.findByRoleName(ERole.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
-        roles.add(userRole);
 
+        role.forEach(elem -> {
+            switch (elem) {
+                case "store":
+                    Role storeRole = roleRepository.findByRoleName(ERole.ROLE_STORE).orElseThrow(() -> new RuntimeException("Error: Role not found"));
+                    roles.add(storeRole);
+                    break;
+                case "admin":
+                    Role adminRole = roleRepository.findByRoleName(ERole.ROLE_ADMIN).orElseThrow(() -> new RuntimeException("Error: role not found."));
+                    roles.add(adminRole);
+                    break;
+                default:
+                    Role userRole = roleRepository.findByRoleName(ERole.ROLE_USER).orElseThrow(() -> new RuntimeException("Error: Role not found"));
+                    roles.add(userRole);
+                    break;
+            }
+        });
         user.setRoles(roles);
         userService.newUser(user);
         cartService.newCartSession(user.getCartId());
@@ -107,7 +125,7 @@ public class UserController {
         cartService.newCartSession(entity.getCartId());
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     @GetMapping("/cart")
     public ResponseEntity<ResponseMessage<Object>> getUserCart(@RequestParam("cartId") String cartId) {
         CartResponse entity = cartService.getCart(cartId);
@@ -118,7 +136,7 @@ public class UserController {
 
 
     @PostMapping("/cart/add")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     public ResponseEntity<ResponseMessage<Boolean>> addCartElement(
             @RequestParam("productId") int productId,
             @RequestParam("cartId") String cartId,
@@ -127,7 +145,7 @@ public class UserController {
         return new ResponseEntity<>(new ResponseMessage<>(cartService.addCartElement(product, qty, cartId)), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     @PostMapping("/cart/update-element")
     public void updateCartElement(
             @RequestParam("productId") int productId,
@@ -137,19 +155,28 @@ public class UserController {
         cartService.updateCartElement(productService.getById(productId), qty, cartId);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     @PostMapping("/cart/clear")
     public ResponseEntity<ResponseMessage<Boolean>> clearCart(@RequestParam("cartId") String cartId) {
         return new ResponseEntity<>(new ResponseMessage<>(cartService.clearCart(cartId)).setIsError(false), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('USER')")
+    @GetMapping("/cart/get-coupons")
+    public List<String> getCartCoupons(@RequestParam("cartId") String cartId) {
+        return this.cartService.getCartCoupon(cartId);
+    }
+
+    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     @PostMapping("place-order")
     public ResponseEntity<ResponseMessage<String>> placeOrder(@RequestParam("cartId") String cartId, @RequestParam("userAddressId") int userAddressId) {
+        ResponseMessage<String> response = new ResponseMessage<>("");
         try {
-            cartService.placeOrder(cartId, userAddressId);
+            response = cartService.placeOrder(cartId, userAddressId);
         } catch (ProductQuantityUnavailableException ex) {
-            return new ResponseEntity<>(new ResponseMessage<>("one or more product quantity not available"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedException e) {
+            return new ResponseEntity<>(response.setIsError(true), HttpStatus.UNAUTHORIZED);
         }
         return new ResponseEntity<>(new ResponseMessage<>("Order Correctly Placed"), HttpStatus.OK);
     }

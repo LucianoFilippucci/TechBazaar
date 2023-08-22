@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductInPurchase {
+    private String productName;
     private int productId;
     private int productQuantity;
     private float unitaryPrice;

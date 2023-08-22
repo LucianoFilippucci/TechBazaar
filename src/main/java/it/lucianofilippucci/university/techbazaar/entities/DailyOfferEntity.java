@@ -15,7 +15,7 @@ import java.util.Date;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "daily_offer", schema = "techbazaar")
+@Table(name = "product_daily_offer", schema = "techbazaar")
 public class DailyOfferEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

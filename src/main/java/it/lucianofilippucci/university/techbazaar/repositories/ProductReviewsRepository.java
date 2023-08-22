@@ -19,7 +19,7 @@ public interface ProductReviewsRepository extends JpaRepository<ProductReviewsEn
     @Query("SELECT pre FROM ProductReviewsEntity pre WHERE pre.product.productId = :id")
     Page<ProductReviewsEntity> findByProductId(@Param("id") int pid, Pageable paging);
 
-    @Query("SELECT pre FROM ProductReviewsEntity  pre WHERE pre.user = :id AND pre.product.productId = :productId")
+    @Query("SELECT pre FROM ProductReviewsEntity  pre WHERE pre.user.userId = :id AND pre.product.productId = :productId")
     List<ProductReviewsEntity> existByUserId(@Param("id") int userId, @Param("productId") int productId);
 
 

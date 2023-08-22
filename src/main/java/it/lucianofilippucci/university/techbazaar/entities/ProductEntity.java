@@ -52,13 +52,13 @@ public class ProductEntity {
     @ManyToOne
     @JoinColumn(name = "store_identifier")
     @JsonIgnore
-    private StoreEntity store;
+    private UserEntity store;
 
     @OneToMany(mappedBy = "product")
     @JsonIgnore
     private List<ProductReviewsEntity> reviews;
 
-    @OneToMany
+    @OneToMany(mappedBy = "product")
     @JsonIgnore
     private Collection<DailyOfferEntity> dailyOffers;
 

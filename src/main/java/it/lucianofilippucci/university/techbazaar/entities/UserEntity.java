@@ -3,6 +3,7 @@ package it.lucianofilippucci.university.techbazaar.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CollectionId;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Collection;
@@ -36,6 +37,14 @@ public class UserEntity {
     @Column(name = "email", nullable = false, length = 45)
     private String email;
 
+    @Basic
+    @Column(name = "p_iva")
+    private long pIva = 0L;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "store")
+    private Collection<ProductEntity> storeProducts;
+
     @Field("cartId")
     private String cartId;
 
@@ -55,9 +64,16 @@ public class UserEntity {
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
+    @OneToMany(mappedBy = "store")
+    @JsonIgnore
+    private Collection<CouponEntity> coupons;
+
     public UserEntity(String username, String email, String encode) {
         this.username = username;
         this.email = email;
         this.password = encode;
     }
+
+    @ManyToMany(mappedBy = "users")
+    private Set<CouponEntity> usedCoupon;
 }

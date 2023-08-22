@@ -2,7 +2,8 @@ package it.lucianofilippucci.university.techbazaar.helpers.Entities;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.ProductReviewsEntity;
-import it.lucianofilippucci.university.techbazaar.entities.StoreEntity;
+
+import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,7 +24,7 @@ public class Product {
     private String category;
     private float price;
     private int qty;
-    private StoreEntity store;
+    private UserEntity store;
     private int productQty; //needed only in Order.
 
 

@@ -1,9 +1,10 @@
 package it.lucianofilippucci.university.techbazaar.services;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
+import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.DropboxHelper;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
-import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.NotAuthorizedException;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.NotAuthorizedException;
 import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
 import it.lucianofilippucci.university.techbazaar.helpers.FilePathType;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
@@ -41,30 +42,53 @@ public class ProductService {
     public ProductEntity newProduct(ProductEntity pe) { return productRepository.save(pe); }
 
     @Transactional
-    public ResponseMessage<String> editProduct(ProductEntity product) {
-        Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(product.getProductId()));
+    public ResponseMessage<String> editProduct(int productId, int storeId, float price, String name, String description, String category, int qty) throws NotAuthorizedException {
+        Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(productId));
         if(productEntity.isPresent()) {
-
             ProductEntity updatedEntity = productEntity.get();
-            updatedEntity.setProductPrice(product.getProductPrice());
-            updatedEntity.setProductName(product.getProductName());
-            updatedEntity.setProductQuantity(product.getProductQuantity());
-            updatedEntity.setProductCategory(product.getProductCategory());
-            updatedEntity.setProductDescription(product.getProductDescription());
+            if(updatedEntity.getStore().getUserId() == storeId) {
+                if(price != 0.0)updatedEntity.setProductPrice(price);
+                if(name != null)updatedEntity.setProductName(name);
+                updatedEntity.setProductQuantity(qty);
+                if(category != null)updatedEntity.setProductCategory(category);
+                if(description != null)updatedEntity.setProductDescription(description);
+                productRepository.save(updatedEntity);
+                return new ResponseMessage<>("Product Saved Correctly");
+            } else {
+                throw new NotAuthorizedException();
+            }
 
-            productRepository.save(updatedEntity);
-            return new ResponseMessage<>("Product Saved Correctly");
         }
-        return new ResponseMessage<>("Error Saving the product. The product Doesn't Exists");
+        return new ResponseMessage<>("The product Doesn't Exists");
+    }
+    @Transactional
+    public ResponseMessage<String> editProduct(int productId, int storeId, float price, String name, String description, String category, int qty, int totalSelt) throws NotAuthorizedException {
+        Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(productId));
+        if(productEntity.isPresent()) {
+            ProductEntity updatedEntity = productEntity.get();
+            if(updatedEntity.getStore().getUserId() == storeId) {
+                if(price != 0.0)updatedEntity.setProductPrice(price);
+                if(name != null)updatedEntity.setProductName(name);
+                updatedEntity.setProductQuantity(qty);
+                if(category != null)updatedEntity.setProductCategory(category);
+                if(description != null)updatedEntity.setProductDescription(description);
+                productRepository.save(updatedEntity);
+                return new ResponseMessage<>("Product Saved Correctly");
+            } else {
+                throw new NotAuthorizedException();
+            }
+
+        }
+        return new ResponseMessage<>("The product Doesn't Exists");
     }
 
     @Transactional
-    public ResponseMessage<String> deleteProduct(int id, String storeId) throws NotAuthorizedException {
+    public ResponseMessage<String> deleteProduct(int id, int storeId) throws NotAuthorizedException {
         try {
             Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(id));
             if (productEntity.isPresent()) {
                 ProductEntity removed = productEntity.get();
-                if (!removed.getStore().getStoreId().equals(storeId))
+                if (!(removed.getStore().getUserId() == storeId))
                     throw new NotAuthorizedException();
                 productRepository.delete(removed);
 
@@ -94,7 +118,11 @@ public class ProductService {
         return products;
     }
 
-    public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, String storeId) {
+    public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, int storeId) {
         return helper.upload(files, productId, FilePathType.STORE_PRODUCT, storeId);
+    }
+
+    public List<ProductEntity> getByStoreId(UserEntity store) {
+        return this.productRepository.findAllByStore(store);
     }
 }

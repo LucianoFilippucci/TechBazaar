@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
@@ -28,7 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration  {
 
     @Autowired
@@ -70,11 +71,13 @@ public class SecurityConfiguration  {
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers("/user/auth/**").permitAll()
+                                .requestMatchers("/user/auth/login").permitAll()
+                                .requestMatchers("/user/auth/signup").permitAll()
                                 .requestMatchers("/product/single-item").permitAll()
                                 .requestMatchers("/product").permitAll()
                                 .requestMatchers("/product/search/**").permitAll()
                                 .requestMatchers("/product/reviews").permitAll()
+                                .requestMatchers("/product/store-products").permitAll()
                                 .anyRequest().authenticated())
                 .cors(cors -> corsConfigurationSource());
         http.authenticationProvider(authenticationProvider());
