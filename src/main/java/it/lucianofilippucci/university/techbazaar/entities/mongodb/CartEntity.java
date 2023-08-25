@@ -1,6 +1,8 @@
 package it.lucianofilippucci.university.techbazaar.entities.mongodb;
 
 import it.lucianofilippucci.university.techbazaar.entities.CouponEntity;
+import it.lucianofilippucci.university.techbazaar.helpers.model.CartCouponModel;
+import it.lucianofilippucci.university.techbazaar.helpers.model.ProductInCartModel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -24,10 +27,8 @@ public class CartEntity {
     private Date createdAt;
     private Date updatedAt;
 
-    // The first Integer is the product id while the second Integer Value it's for the product qty.
-    private HashMap<Integer, Integer> productsInCart;
+    private List<ProductInCartModel> productsInCart;
 
-    // String = CouponCode; Integer = Discount
-    private HashMap<String, Integer> coupons;
+    private List<CartCouponModel> coupons;
 
 }

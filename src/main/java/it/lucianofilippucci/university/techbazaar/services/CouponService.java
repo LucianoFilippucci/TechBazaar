@@ -1,12 +1,16 @@
 package it.lucianofilippucci.university.techbazaar.services;
 
 
+import it.lucianofilippucci.university.techbazaar.controllers.CartController;
 import it.lucianofilippucci.university.techbazaar.entities.CouponEntity;
+import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.CartEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.CartResponse;
 import it.lucianofilippucci.university.techbazaar.helpers.ProductInCart;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.*;
+import it.lucianofilippucci.university.techbazaar.helpers.model.CartCouponModel;
+import it.lucianofilippucci.university.techbazaar.helpers.model.ProductInCartModel;
 import it.lucianofilippucci.university.techbazaar.repositories.CouponRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.UserRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.CartRepository;
@@ -37,6 +41,9 @@ public class CouponService {
     UserRepository userRepository;
     @Autowired
     CartRepository cartRepository;
+
+    @Autowired
+    ProductService productService;
 
     public List<CouponEntity> getAvailableCoupon() {
         return couponRepository.findAll();
@@ -79,45 +86,47 @@ public class CouponService {
         UserEntity user = this.userService.getUserByCart(cartId);
         CouponEntity couponEntity = getCoupon(coupon);
         CartEntity ce = this.cartRepository.findByCartId(cartId);
-        HashMap<String, Integer> cartCouponList = ce.getCoupons();
+
+
+        List<CartCouponModel> cartCoupons = ce.getCoupons();
+        boolean isPresent = false;
+
         if(couponEntity != null) {
             UserEntity store = couponEntity.getStore();
-            for(ProductInCart pic : userCart.getProducts()) {
-                if(pic.getCategory().equals(couponEntity.getCategory())) {
-                    for(CouponEntity entry : store.getCoupons()) {
-                        if(entry.getCode().equals(coupon)) {
-                            if(!cartCouponList.containsKey(coupon)) {
-                                Date now = new Date();
-                                Timestamp timestamp = new Timestamp(now.getTime());
-                                Date exp = entry.getExpirationDate();
-                                if(timestamp.before(exp)) {
-                                    if(entry.getMaxUses() > 0) {
-                                        entry.setTimesUsed(entry.getTimesUsed() + 1);
-                                        ce.getCoupons().put(entry.getCode(), entry.getDiscount());
-                                    } else if(entry.getMaxUses() == -1) {
-                                        user.getUsedCoupon().add(couponEntity);
-                                        ce.getCoupons().put(entry.getCode(), entry.getDiscount());
-                                    }
-                                    else {
-                                        throw new CouponMaxUseReachedException();
-                                    }
-                                } else {
-                                    throw new CouponExpiredException();
-                                }
-                            } else
-                                throw new CouponAlreadyUsedException();
-                        }
-                    }
+            for(CartCouponModel ccm : cartCoupons) {
+                if(ccm.getCouponCode().equals(couponEntity.getCode())) {
+                    isPresent = true;
+                    break;
                 }
             }
+            if(!isPresent) {
+                for(ProductInCartModel picm : ce.getProductsInCart()) {
+                    ProductEntity productEntity = productService.getById(picm.getProductId());
+                    if(productEntity.getProductCategory().equals(couponEntity.getCategory())) {
+                        Date now = new Date();
+                        Timestamp timestamp = new Timestamp(now.getTime());
+                        Date exp = couponEntity.getExpirationDate();
+                        if(timestamp.before(exp)) {
+                            if(couponEntity.getTimesUsed() >= couponEntity.getMaxUses()) throw new CouponMaxUseReachedException();
+                            float discount = (picm.getProductPrice() * couponEntity.getDiscount()) / 100;
+                            float newPrice = picm.getProductPrice() - discount;
+                            picm.setProductPrice(newPrice);
+                            couponEntity.setTimesUsed(couponEntity.getTimesUsed() + 1);
+                            ce.getCoupons().add(new CartCouponModel(couponEntity.getCode(), couponEntity.getDiscount()));
+                            user.getUsedCoupon().add(couponEntity);
+                        } else throw new CouponExpiredException();
+                    }
+                }
 
+            } else throw new CouponAlreadyUsedException();
             this.userRepository.save(user);
             this.userRepository.save(store);
             this.cartRepository.save(ce);
+        } throw new CouponNotFoundException();
 
-        } else {
-            throw new CouponNotFoundException();
-        }
+
+
+
     }
 
 }

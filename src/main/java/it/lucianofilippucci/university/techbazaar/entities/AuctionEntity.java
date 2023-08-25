@@ -1,84 +1,58 @@
 package it.lucianofilippucci.university.techbazaar.entities;
 
+import it.lucianofilippucci.university.techbazaar.helpers.model.AuctionStatus;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-import java.sql.Date;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.Date;
 
+
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 @Entity
-@jakarta.persistence.Table(name = "auction", schema = "techbazaar", catalog = "")
+@Table(name = "auction", schema = "techbazaar")
 public class AuctionEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @jakarta.persistence.Column(name = "auction_id")
+    @Column(name = "auction_id", nullable = false)
     private int auctionId;
 
-    public int getAuctionId() {
-        return auctionId;
-    }
 
-    public void setAuctionId(int auctionId) {
-        this.auctionId = auctionId;
-    }
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private ProductEntity product;
+
 
     @Basic
-    @Column(name = "product_id")
-    private int productId;
-
-    public int getProductId() {
-        return productId;
-    }
-
-    public void setProductId(int productId) {
-        this.productId = productId;
-    }
-
-    @Basic
-    @Column(name = "starting_price")
+    @Column(name = "starting_price", nullable = false)
     private double startingPrice;
 
-    public double getStartingPrice() {
-        return startingPrice;
-    }
+    @Basic
+    @Column(name = "final_price")
+    private float finalPrice;
 
-    public void setStartingPrice(double startingPrice) {
-        this.startingPrice = startingPrice;
-    }
+
+    @ManyToOne
+    @JoinColumn(name = "winner")
+    private UserEntity winner;
+
 
     @Basic
-    @Column(name = "winner")
-    private String winner;
-
-    public String getWinner() {
-        return winner;
-    }
-
-    public void setWinner(String winner) {
-        this.winner = winner;
-    }
+    @Column(name = "date", nullable = false)
+    private LocalDateTime date;
 
     @Basic
-    @Column(name = "date")
-    private Date date;
+    @Column(name = "final_date")
+    private LocalDateTime finalDate;
 
-    public Date getDate() {
-        return date;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private AuctionStatus auctionStatus;
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AuctionEntity that = (AuctionEntity) o;
-        return auctionId == that.auctionId && productId == that.productId && Double.compare(startingPrice, that.startingPrice) == 0 && Objects.equals(winner, that.winner) && Objects.equals(date, that.date);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(auctionId, productId, startingPrice, winner, date);
-    }
 }

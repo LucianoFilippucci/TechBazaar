@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -76,4 +77,8 @@ public class UserEntity {
 
     @ManyToMany(mappedBy = "users")
     private Set<CouponEntity> usedCoupon;
+
+    @OneToMany(mappedBy = "winner", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<AuctionEntity> auctionsWon;
 }

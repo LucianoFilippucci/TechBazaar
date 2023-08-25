@@ -62,6 +62,17 @@ public class ProductEntity {
     @JsonIgnore
     private Collection<DailyOfferEntity> dailyOffers;
 
+    @Basic
+    @Column(name = "iva")
+    private int iva;
+
+    @OneToMany(mappedBy = "product")
+    @JsonIgnore
+    private List<AuctionEntity> auctionEntities;
+
+    @OneToMany(mappedBy = "product")
+    @JsonIgnore
+    private List<PriceVariationEntity> priceVariationEntities;
 //    @OneToMany
 //    @JsonIgnore
 //    private Collection<OrderDetailsEntity> orderDetailsEntities;

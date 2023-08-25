@@ -4,7 +4,6 @@ import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.ProductReviewsEntity;
 
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
-import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;

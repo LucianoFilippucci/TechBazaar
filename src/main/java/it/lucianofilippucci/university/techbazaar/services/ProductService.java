@@ -5,10 +5,10 @@ import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.DropboxHelper;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.NotAuthorizedException;
-import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
 import it.lucianofilippucci.university.techbazaar.helpers.FilePathType;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
 import it.lucianofilippucci.university.techbazaar.helpers.TelegramSender;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,25 +61,16 @@ public class ProductService {
         }
         return new ResponseMessage<>("The product Doesn't Exists");
     }
-    @Transactional
-    public ResponseMessage<String> editProduct(int productId, int storeId, float price, String name, String description, String category, int qty, int totalSelt) throws NotAuthorizedException {
-        Optional<ProductEntity> productEntity = Optional.ofNullable(productRepository.findByProductId(productId));
-        if(productEntity.isPresent()) {
-            ProductEntity updatedEntity = productEntity.get();
-            if(updatedEntity.getStore().getUserId() == storeId) {
-                if(price != 0.0)updatedEntity.setProductPrice(price);
-                if(name != null)updatedEntity.setProductName(name);
-                updatedEntity.setProductQuantity(qty);
-                if(category != null)updatedEntity.setProductCategory(category);
-                if(description != null)updatedEntity.setProductDescription(description);
-                productRepository.save(updatedEntity);
-                return new ResponseMessage<>("Product Saved Correctly");
-            } else {
-                throw new NotAuthorizedException();
-            }
 
-        }
-        return new ResponseMessage<>("The product Doesn't Exists");
+    @Transactional
+    public boolean editProductQtyAfterSelling(int productId, int newQty, int soldQty) throws ObjectNotFoundException {
+        Optional<ProductEntity> product = Optional.ofNullable(productRepository.findByProductId(productId));
+        if(product.isPresent()) {
+            ProductEntity entity = product.get();
+            entity.setProductQuantity(newQty);
+            entity.setProductTotalSelt(entity.getProductTotalSelt() + soldQty);
+            return true;
+        } else throw new ObjectNotFoundException();
     }
 
     @Transactional
@@ -101,7 +92,7 @@ public class ProductService {
     }
 
     @Transactional
-    public List<Product> getContainingKeywords(String keywords) throws ProductIdNotFound {
+    public List<Product> getContainingKeywords(String keywords) throws ObjectNotFoundException {
         ArrayList<Product> result;
 
         List<ProductEntity> entities = productRepository.findByProductNameContaining(keywords);
@@ -110,7 +101,7 @@ public class ProductService {
         return result;
     }
 
-    private ArrayList<Product> convertFromJPAToSpecificEntity(List<ProductEntity> productEntities) throws ProductIdNotFound {
+    private ArrayList<Product> convertFromJPAToSpecificEntity(List<ProductEntity> productEntities) throws ObjectNotFoundException {
         ArrayList<Product> products = new ArrayList<>();
         for(ProductEntity entity: productEntities) {
             products.add(new Product(entity));

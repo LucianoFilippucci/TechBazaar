@@ -47,8 +47,6 @@ public class UserController {
     @Autowired
     CartService cartService;
 
-    @Autowired
-    ProductService productService;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -77,8 +75,6 @@ public class UserController {
 
         return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles, userDetails.getCartId()));
     }
-
-    @GetMapping("/")
 
     @PostMapping("/auth/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest request) {
@@ -124,62 +120,5 @@ public class UserController {
         UserEntity entity = userService.newUser(user);
         cartService.newCartSession(entity.getCartId());
     }
-
-    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
-    @GetMapping("/cart")
-    public ResponseEntity<ResponseMessage<Object>> getUserCart(@RequestParam("cartId") String cartId) {
-        CartResponse entity = cartService.getCart(cartId);
-        return new ResponseEntity<>(new ResponseMessage<>(entity), HttpStatus.OK);
-    }
-
-
-
-
-    @PostMapping("/cart/add")
-    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
-    public ResponseEntity<ResponseMessage<Boolean>> addCartElement(
-            @RequestParam("productId") int productId,
-            @RequestParam("cartId") String cartId,
-            @RequestParam("qty") int qty) {
-        ProductEntity product = productService.getById(productId);
-        return new ResponseEntity<>(new ResponseMessage<>(cartService.addCartElement(product, qty, cartId)), HttpStatus.OK);
-    }
-
-    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
-    @PostMapping("/cart/update-element")
-    public void updateCartElement(
-            @RequestParam("productId") int productId,
-            @RequestParam("qty") int qty,
-            @RequestParam("cartId") String cartId
-    ) {
-        cartService.updateCartElement(productService.getById(productId), qty, cartId);
-    }
-
-    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
-    @PostMapping("/cart/clear")
-    public ResponseEntity<ResponseMessage<Boolean>> clearCart(@RequestParam("cartId") String cartId) {
-        return new ResponseEntity<>(new ResponseMessage<>(cartService.clearCart(cartId)).setIsError(false), HttpStatus.OK);
-    }
-
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping("/cart/get-coupons")
-    public List<String> getCartCoupons(@RequestParam("cartId") String cartId) {
-        return this.cartService.getCartCoupon(cartId);
-    }
-
-    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
-    @PostMapping("place-order")
-    public ResponseEntity<ResponseMessage<String>> placeOrder(@RequestParam("cartId") String cartId, @RequestParam("userAddressId") int userAddressId) {
-        ResponseMessage<String> response = new ResponseMessage<>("");
-        try {
-            response = cartService.placeOrder(cartId, userAddressId);
-        } catch (ProductQuantityUnavailableException ex) {
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        } catch (NotAuthorizedException e) {
-            return new ResponseEntity<>(response.setIsError(true), HttpStatus.UNAUTHORIZED);
-        }
-        return new ResponseEntity<>(new ResponseMessage<>("Order Correctly Placed"), HttpStatus.OK);
-    }
-
 
 }

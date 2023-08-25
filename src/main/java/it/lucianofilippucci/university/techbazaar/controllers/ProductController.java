@@ -1,18 +1,16 @@
 package it.lucianofilippucci.university.techbazaar.controllers;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
-import it.lucianofilippucci.university.techbazaar.helpers.Entities.NewReviewRequest;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.NotAuthorizedException;
-import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductIdNotFound;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
 import it.lucianofilippucci.university.techbazaar.helpers.TelegramSender;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.StoreNotFound;
 import it.lucianofilippucci.university.techbazaar.services.ProductReviewService;
 import it.lucianofilippucci.university.techbazaar.services.ProductService;
 
 import it.lucianofilippucci.university.techbazaar.services.UserService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -42,7 +40,7 @@ public class ProductController {
 
 
     @GetMapping
-    public List<Product> getAll() throws ProductIdNotFound {
+    public List<Product> getAll() throws ObjectNotFoundException {
         List<ProductEntity> products = productService.getAllProducts();
         ArrayList<Product> result = new ArrayList<Product>();
         if(!products.isEmpty()) {
@@ -54,7 +52,7 @@ public class ProductController {
     }
 
     @GetMapping("/search/{keyword}")
-    public List<Product> getBySearchbox(@PathVariable("keyword") String keyword) throws ProductIdNotFound {
+    public List<Product> getBySearchbox(@PathVariable("keyword") String keyword) throws ObjectNotFoundException {
         return productService.getContainingKeywords(keyword);
     }
 
