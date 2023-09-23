@@ -69,6 +69,15 @@ public class UserEntity {
     @JsonIgnore
     private Collection<CouponEntity> coupons;
 
+    @Basic
+    @Column(name = "notifications")
+    private int notifications;
+
+    @Basic
+    @Column(name = "thumbnail_path")
+    private String path;
+
+
     public UserEntity(String username, String email, String encode) {
         this.username = username;
         this.email = email;

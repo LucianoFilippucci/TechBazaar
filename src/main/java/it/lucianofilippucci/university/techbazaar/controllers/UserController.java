@@ -1,19 +1,13 @@
 package it.lucianofilippucci.university.techbazaar.controllers;
 
-import it.lucianofilippucci.university.techbazaar.entities.CouponEntity;
-import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.Role;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
-import it.lucianofilippucci.university.techbazaar.entities.mongodb.CartEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.*;
-import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductQuantityUnavailableException;
-import it.lucianofilippucci.university.techbazaar.helpers.exceptions.NotAuthorizedException;
-import it.lucianofilippucci.university.techbazaar.helpers.exceptions.StoreNotFound;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.helpers.model.ERole;
 import it.lucianofilippucci.university.techbazaar.repositories.RoleRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.UserRepository;
 import it.lucianofilippucci.university.techbazaar.security.JwtUtils;
-import it.lucianofilippucci.university.techbazaar.services.ProductService;
 import it.lucianofilippucci.university.techbazaar.services.UserDetailsImpl;
 import it.lucianofilippucci.university.techbazaar.services.UserService;
 import it.lucianofilippucci.university.techbazaar.services.mongodb.CartService;
@@ -24,11 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,27 +32,37 @@ import java.util.stream.Collectors;
 
 public class UserController {
 
-    @Autowired
     UserService userService;
 
-    @Autowired
     UserRepository userRepository;
 
-    @Autowired
     CartService cartService;
 
 
-    @Autowired
     AuthenticationManager authenticationManager;
 
-    @Autowired
     RoleRepository roleRepository;
 
-    @Autowired
     PasswordEncoder encoder;
 
-    @Autowired
     JwtUtils jwtUtils;
+
+    public UserController(
+            JwtUtils jwtUtils,
+            PasswordEncoder passwordEncoder,
+            RoleRepository roleRepository,
+            AuthenticationManager authenticationManager,
+            CartService cartService,
+            UserRepository userRepository,
+            UserService userService){
+        this.jwtUtils = jwtUtils;
+        this.encoder = passwordEncoder;
+        this.roleRepository = roleRepository;
+        this.authenticationManager = authenticationManager;
+        this.cartService = cartService;
+        this.userService = userService;
+        this.userRepository = userRepository;
+    }
 
     @PostMapping("/auth/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -73,8 +77,14 @@ public class UserController {
                 .map(item-> item.getAuthority())
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles, userDetails.getCartId()));
+        try {
+            int totalUnreadNotifications = this.userService.getTotalNotifications(userDetails.getId());
+            return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles, userDetails.getCartId(), userDetails.getThumbnailPath(), totalUnreadNotifications));
+        } catch (ObjectNotFoundException e) {
+            return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles, userDetails.getCartId(), userDetails.getThumbnailPath(), 0));
+        }
     }
+
 
     @PostMapping("/auth/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest request) {
@@ -121,4 +131,9 @@ public class UserController {
         cartService.newCartSession(entity.getCartId());
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/upload-thumbnail")
+    public ResponseEntity<ResponseMessage<String>> uploadThumbnail(@RequestParam("files") MultipartFile[] file, @RequestParam("userId") int userId) {
+        return new ResponseEntity<>(this.userService.uploadThumbnail(file, userId), HttpStatus.OK);
+    }
 }

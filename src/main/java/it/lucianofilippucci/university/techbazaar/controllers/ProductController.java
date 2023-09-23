@@ -131,4 +131,10 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasRole('STORE')")
+    @PostMapping("/upload-images")
+    public ResponseEntity<ResponseMessage<String>> uploadImages(@RequestParam("files") MultipartFile[] file, @RequestParam("productId") int productId, @RequestParam("storeId") int storeId) {
+        return new ResponseEntity<>(this.productService.uploadFiles(file, productId, storeId), HttpStatus.OK);
+    }
+
 }

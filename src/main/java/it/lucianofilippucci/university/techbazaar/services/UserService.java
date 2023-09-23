@@ -1,13 +1,18 @@
 package it.lucianofilippucci.university.techbazaar.services;
 
+import com.dropbox.core.v2.files.FileMetadata;
+import com.dropbox.core.v2.sharing.SharedLinkMetadata;
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserAddressEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
+import it.lucianofilippucci.university.techbazaar.entities.mongodb.NotificationEntity;
+import it.lucianofilippucci.university.techbazaar.helpers.*;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductInPurchase;
-import it.lucianofilippucci.university.techbazaar.helpers.Helpers;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.StoreNotFound;
 import it.lucianofilippucci.university.techbazaar.repositories.UserAddressRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.UserRepository;
+import it.lucianofilippucci.university.techbazaar.repositories.mongodb.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,14 +31,26 @@ import java.util.Optional;
 @Service
 public class UserService implements UserDetailsService {
 
-    @Autowired
     UserRepository userRepository;
 
-    @Autowired
     UserAddressRepository userAddressRepository;
 
-    @Autowired
     ProductService productService;
+
+    NotificationRepository notificationRepository;
+
+    NotificationService notificationService;
+
+    DropboxHelper dropboxHelper;
+    public UserService(DropboxHelper dropboxHelper, NotificationService notificationService, UserRepository userRepository, UserAddressRepository userAddressRepository, ProductService productService, NotificationRepository notificationRepository) {
+        this.userRepository = userRepository;
+        this.userAddressRepository = userAddressRepository;
+        this.productService = productService;
+        this.notificationRepository = notificationRepository;
+        this.dropboxHelper = dropboxHelper;
+        this.notificationService = notificationService;
+
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -56,7 +74,12 @@ public class UserService implements UserDetailsService {
     @Transactional
     public UserEntity newUser(UserEntity user) {
         user.setCartId(Helpers.GenerateUID());
-        return userRepository.save(user);
+        UserEntity userEntity =  userRepository.save(user);
+        NotificationEntity entity = new NotificationEntity();
+        entity.setNotificationList(new ArrayList<>());
+        entity.setUserId(entity.getUserId());
+        this.notificationRepository.save(entity);
+        return userEntity;
     }
 
     @Transactional(readOnly = true)
@@ -82,4 +105,22 @@ public class UserService implements UserDetailsService {
     public void setStoreOrder(int storeId, List<ProductInPurchase> products, String orderId) {
 
     }
+
+    public int getTotalNotifications(int userId) throws ObjectNotFoundException {
+        return this.notificationService.totalUnreadNotifications(userId);
+    }
+
+    public ResponseMessage<String> uploadThumbnail(MultipartFile[] multipartfile, int userId) {
+       DropboxResponse dropboxResponse = this.dropboxHelper.upload(multipartfile, userId, FilePathType.USER);
+
+       if(!dropboxResponse.isError()) {
+           Optional<UserEntity> user = this.userRepository.findUserEntityByUserId(userId);
+           if(user.isEmpty()) return new ResponseMessage<>("UserNotFound").setIsError(true);
+           user.get().setPath(dropboxResponse.message().get(0));
+           this.userRepository.save(user.get());
+           return new ResponseMessage<>("thumbnail available at: " + dropboxResponse.message().get(0));
+       }
+       return new ResponseMessage<>("Error -> " + dropboxResponse.message()).setIsError(true);
+    }
+
 }

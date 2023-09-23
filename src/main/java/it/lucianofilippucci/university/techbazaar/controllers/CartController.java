@@ -90,7 +90,7 @@ public class CartController {
         ResponseMessage<String> response = new ResponseMessage<>("");
         try {
             response = cartService.placeOrder(cartId, userAddressId);
-        } catch (it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductQuantityUnavailableException ex) {
+        } catch (it.lucianofilippucci.university.techbazaar.helpers.exceptions.ProductQuantityUnavailableException ex) {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (NotAuthorizedException e) {
             return new ResponseEntity<>(response.setIsError(true), HttpStatus.UNAUTHORIZED);

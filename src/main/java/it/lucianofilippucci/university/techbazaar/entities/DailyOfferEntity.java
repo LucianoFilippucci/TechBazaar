@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Getter
@@ -29,11 +30,14 @@ public class DailyOfferEntity {
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "date", nullable = false)
-    @CreationTimestamp
-    private Date date;
+    private LocalDateTime date;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
     @JsonIgnore
     private ProductEntity product;
+
+    @Basic
+    @Column(name = "status")
+    private String status;
 }

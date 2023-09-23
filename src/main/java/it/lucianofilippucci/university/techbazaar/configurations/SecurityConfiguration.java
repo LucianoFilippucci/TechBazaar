@@ -79,6 +79,7 @@ public class SecurityConfiguration  {
                                 .requestMatchers("/product/reviews").permitAll()
                                 .requestMatchers("/product/store-products").permitAll()
                                 .requestMatchers("/auction/").permitAll()
+                                .requestMatchers("/daily/").permitAll()
                                 .anyRequest().authenticated())
                 .cors(cors -> corsConfigurationSource());
         http.authenticationProvider(authenticationProvider());

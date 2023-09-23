@@ -21,18 +21,21 @@ public class UserDetailsImpl implements UserDetails {
 
     private String cartId;
 
+    private String thumbnailPath;
+
     @JsonIgnore
     private String password;
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Integer id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities, String cartId) {
+    public UserDetailsImpl(Integer id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities, String cartId, String thumbnailPath) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
         this.cartId = cartId;
+        this.thumbnailPath = thumbnailPath;
     }
 
     public static UserDetailsImpl build(UserEntity user) {
@@ -46,7 +49,8 @@ public class UserDetailsImpl implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 grantedAuthorities,
-                user.getCartId()
+                user.getCartId(),
+                user.getPath()
         );
     }
 
@@ -64,6 +68,10 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public String getCartId() { return cartId; }
+
+    public String getThumbnailPath() { return thumbnailPath; }
+
+
 
     @Override
     public String getPassword() {
@@ -94,6 +102,8 @@ public class UserDetailsImpl implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
 
     @Override
     public boolean equals(Object o) {

@@ -6,7 +6,7 @@ import it.lucianofilippucci.university.techbazaar.entities.mongodb.OrderDetailsE
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.StoreOrderEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.CartResponse;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductInPurchase;
-import it.lucianofilippucci.university.techbazaar.helpers.Exceptions.ProductQuantityUnavailableException;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ProductQuantityUnavailableException;
 import it.lucianofilippucci.university.techbazaar.helpers.Helpers;
 import it.lucianofilippucci.university.techbazaar.helpers.ProductInCart;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;

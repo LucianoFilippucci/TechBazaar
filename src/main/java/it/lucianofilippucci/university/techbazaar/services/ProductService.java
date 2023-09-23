@@ -2,33 +2,38 @@ package it.lucianofilippucci.university.techbazaar.services;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
-import it.lucianofilippucci.university.techbazaar.helpers.DropboxHelper;
+import it.lucianofilippucci.university.techbazaar.entities.mongodb.ProductResourceEntity;
+import it.lucianofilippucci.university.techbazaar.helpers.*;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.NotAuthorizedException;
-import it.lucianofilippucci.university.techbazaar.helpers.FilePathType;
-import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
-import it.lucianofilippucci.university.techbazaar.helpers.TelegramSender;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.repositories.ProductRepository;
+import it.lucianofilippucci.university.techbazaar.services.mongodb.ProductResourcesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProductService {
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
-    @Autowired
     private TelegramSender telegramSender;
 
-    @Autowired
-    private DropboxHelper helper;
+    private final DropboxHelper helper;
+
+    private ProductResourcesService productResourcesService;
+
+    public ProductService(ProductRepository productRepository, DropboxHelper dropboxHelper, ProductResourcesService productResourcesService) {
+        this.productRepository = productRepository;
+        this.helper = dropboxHelper;
+        this.productResourcesService = productResourcesService;
+    }
 
     @Transactional(readOnly = true)
     public ProductEntity getById(int id){ return productRepository.findByProductId(id);}
@@ -39,7 +44,11 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductEntity newProduct(ProductEntity pe) { return productRepository.save(pe); }
+    public ProductEntity newProduct(ProductEntity pe) {
+        ProductEntity en = productRepository.save(pe);
+        this.productResourcesService.newResource(en.getProductId());
+        return en;
+    }
 
     @Transactional
     public ResponseMessage<String> editProduct(int productId, int storeId, float price, String name, String description, String category, int qty) throws NotAuthorizedException {
@@ -110,7 +119,11 @@ public class ProductService {
     }
 
     public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, int storeId) {
-        return helper.upload(files, productId, FilePathType.STORE_PRODUCT, storeId);
+        DropboxResponse response = helper.upload(files, productId, FilePathType.STORE_PRODUCT, storeId);
+        if(response.isError()) return new ResponseMessage<>("Error ->" + response.message()).setIsError(true);
+        if(this.productResourcesService.newResource(response.message(), productId))
+            return new ResponseMessage<>("OK").setIsError(false);
+        return new ResponseMessage<>("GenericError -> ProductService.uploadFiles()");
     }
 
     public List<ProductEntity> getByStoreId(UserEntity store) {

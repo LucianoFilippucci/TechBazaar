@@ -24,7 +24,7 @@ public class PriceVariationEntity {
 
     @Basic
     @Column(name = "status")
-    private String status; // REJECTED, FULFILLED, CANCELED
+    private String status; // REJECTED, FULFILLED, CANCELED, PENDING
 
     @Basic
     @Column(name = "type")

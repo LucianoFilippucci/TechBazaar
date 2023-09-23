@@ -3,10 +3,13 @@ package it.lucianofilippucci.university.techbazaar.services;
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.ProductReviewsEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.DropboxHelper;
+import it.lucianofilippucci.university.techbazaar.helpers.DropboxResponse;
 import it.lucianofilippucci.university.techbazaar.helpers.FilePathType;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
 import it.lucianofilippucci.university.techbazaar.repositories.ProductReviewsRepository;
+import it.lucianofilippucci.university.techbazaar.repositories.mongodb.ProductResourcesRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.ReviewsLikedRepository;
+import it.lucianofilippucci.university.techbazaar.services.mongodb.ProductResourcesService;
 import it.lucianofilippucci.university.techbazaar.services.mongodb.ReviewsLikedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,17 +32,22 @@ import java.util.Optional;
 @Service
 public class ProductReviewService {
 
-    @Autowired
-    private ProductReviewsRepository productReviewsRepository;
+    private final ProductReviewsRepository productReviewsRepository;
 
-    @Autowired
     DropboxHelper dropboxHelper;
 
-    @Autowired
     ProductService productService;
 
-    @Autowired
     ReviewsLikedService reviewsLikedService;
+    private ProductResourcesService productResourcesService;
+
+    public ProductReviewService(ProductReviewsRepository productReviewsRepository, DropboxHelper dropboxHelper, ProductService productService, ReviewsLikedService reviewsLikedService, ProductResourcesService productResourcesService) {
+        this.dropboxHelper = dropboxHelper;
+        this.productReviewsRepository = productReviewsRepository;
+        this.productService = productService;
+        this.reviewsLikedService = reviewsLikedService;
+        this.productResourcesService = productResourcesService;
+    }
 
     public List<ProductReviewsEntity> getAllReviews(int productId, int page, int pageSize, String sortBy) {
         Pageable paging = PageRequest.of(page, pageSize);
@@ -82,8 +90,12 @@ public class ProductReviewService {
         return p.getProduct().getProductId() != 0;
     }
 
-    public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, int storeId) {
-        return dropboxHelper.upload(files, productId, FilePathType.PRODUCT_REVIEW, storeId);
+    public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, int storeId, int userId) {
+        DropboxResponse response = dropboxHelper.upload(files, FilePathType.PRODUCT_REVIEW, userId, storeId, productId);
+        if(response.isError()) return new ResponseMessage<>("DropboxError -> " + response.message());
+        if(this.productResourcesService.newResource(response.message(), productId, userId))
+            return new ResponseMessage<>("OK").setIsError(false);
+        return new ResponseMessage<>("GenericError -> ProductReviewService");
     }
 
     @Transactional

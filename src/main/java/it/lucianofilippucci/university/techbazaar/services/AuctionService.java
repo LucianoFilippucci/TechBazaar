@@ -35,11 +35,15 @@ public class AuctionService {
     ProductService productService;
     BidRepository bidRepository;
     UserService userService;
-    public AuctionService(AuctionRepository auctionRepository, ProductService productService, BidRepository bidRepository, UserService userService) {
+    NotificationService notificationService;
+    PriceVariationService priceVariationService;
+    public AuctionService(PriceVariationService priceVariationService, AuctionRepository auctionRepository, ProductService productService, BidRepository bidRepository, UserService userService, NotificationService notificationService) {
         this.auctionRepository = auctionRepository;
         this.productService = productService;
         this.bidRepository = bidRepository;
         this.userService = userService;
+        this.notificationService = notificationService;
+        this.priceVariationService = priceVariationService;
     }
     public List<AuctionEntity> getAll() {
         return this.auctionRepository.findAll();
@@ -55,6 +59,7 @@ public class AuctionService {
             auction.setDate(auctionDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
             auction.setFinalDate(auctionEnd.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
             auction.setStartingPrice(startingPrice);
+            auction.setAuctionStatus(AuctionStatus.NOTSTARTED);
             AuctionEntity saved = this.auctionRepository.save(auction);
 
             BidEntity bidEntity = new BidEntity();
@@ -107,16 +112,8 @@ public class AuctionService {
             if(now.isAfter(endDate)) {
                 Optional<BidEntity> auctionBids = this.bidRepository.findByAuctionId(auctionId);
                 if(auctionBids.isPresent()) {
-                    List<BidModel> list = auctionBids.get().getBidsList();
-                    BidModel winnerBidModel = list.get(list.size() - 1);
-                    Optional<UserEntity> winner = this.userService.getById(winnerBidModel.getUserId());
-                    if(winner.isEmpty()) throw new ObjectNotFoundException();
-                    auction.get().setWinner(winner.get());
-                    auction.get().setAuctionStatus(AuctionStatus.CLOSED);
-                    this.auctionRepository.save(auction.get());
-                    winner.get().getAuctionsWon().add(auction.get());
-                    this.userService.userRepository.save(winner.get());
-                    return new BidResponse().setIsAccepted(false).setWinnerName(winner.get().getUsername());
+                    setWinnerAndNotify(auction.get());
+                    return new BidResponse().setIsAccepted(false).setCause("Auction Closed.");
                 } else throw new ObjectNotFoundException();
             } else {
                 Optional<BidEntity> auctionBids = this.bidRepository.findByAuctionId(auctionId);
@@ -145,28 +142,11 @@ public class AuctionService {
             for(AuctionEntity auction : activeAuctions) {
                 LocalDateTime now = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
                 LocalDateTime endDate = auction.getFinalDate();
+                logger.info("now: " + now);
+                logger.info("end: " + endDate);
+                logger.info("isAfter: " + now.isAfter(endDate));
                 if(now.isAfter(endDate)) {
-                    Optional<BidEntity> auctionBids = this.bidRepository.findByAuctionId(auction.getAuctionId());
-                    if(auctionBids.isPresent()) {
-                        if(!auctionBids.get().getBidsList().isEmpty()) {
-                            BidModel winnerBid = auctionBids.get().getBidsList().get(auctionBids.get().getBidsList().size() - 1);
-                            Optional<UserEntity> winner = this.userService.getById(winnerBid.getUserId());
-                            if(winner.isEmpty()) throw new ObjectNotFoundException();
-                            auction.setWinner(winner.get());
-                            auction.setAuctionStatus(AuctionStatus.CLOSED);
-                            this.auctionRepository.save(auction);
-                            //winner.get().getAuctionsWon().add(auction);
-                            //this.userService.userRepository.save(winner.get());
-                            logger.info("User {" + winner.get().getUsername() + "} Won!");
-                            logger.info("Action with id [" + auction.getAuctionId() + "] closed.");
-                            //TODO: Notify to everyone who bid the winner
-                        } else {
-                            auction.setAuctionStatus(AuctionStatus.CLOSED);
-                            this.auctionRepository.save(auction);
-                            logger.info("Auction closed without any bid");
-                            //TODO: notify that the auction closed without any bid
-                        }
-                    }
+                    setWinnerAndNotify(auction);
                 }
             }
         }
@@ -195,6 +175,43 @@ public class AuctionService {
             }
         }
         logger.info("Ended checking for NOT STARTED Auctions\n");
+    }
+
+    private void setWinnerAndNotify(AuctionEntity auction) throws ObjectNotFoundException{
+        Optional<BidEntity> auctionBids = this.bidRepository.findByAuctionId(auction.getAuctionId());
+        if(auctionBids.isPresent()) {
+            if(!auctionBids.get().getBidsList().isEmpty()) {
+                BidModel winnerBid = auctionBids.get().getBidsList().get(auctionBids.get().getBidsList().size() - 1);
+                Optional<UserEntity> winner = this.userService.getById(winnerBid.getUserId());
+                if(winner.isEmpty()) throw new ObjectNotFoundException();
+                auction.setWinner(winner.get());
+                auction.setAuctionStatus(AuctionStatus.CLOSED);
+                this.auctionRepository.save(auction);
+                //winner.get().getAuctionsWon().add(auction);
+                //this.userService.userRepository.save(winner.get());
+                logger.info("User {" + winner.get().getUsername() + "} Won!");
+                logger.info("Action with id [" + auction.getAuctionId() + "] closed.");
+
+                this.priceVariationService.newVariation(auction.getProduct(), auction.getFinalPrice(), "PENDING", "AUCTION");
+                for(BidModel bid : auctionBids.get().getBidsList()) {
+                    Optional<UserEntity> user = this.userService.getById(bid.getUserId());
+                    //TODO: add winner there and not outside;
+                    if(user.isEmpty()) throw new ObjectNotFoundException();
+                    if(user.get().getUserId() == winner.get().getUserId()) {
+                        this.notificationService.sendMessage(0, winnerBid.getUserId(), "YOU WON", "Congrats You won the Auction!");
+                    } else {
+                        this.notificationService.sendMessage(0, user.get().getUserId(), "YOU LOST", "Unfortunately you lost the Auction.");
+                    }
+                    //winner.get().getAuctionsWon().add(auction);
+                    //this.userService.userRepository.save(winner.get());
+                }
+            } else {
+                auction.setAuctionStatus(AuctionStatus.CLOSED);
+                this.auctionRepository.save(auction);
+                logger.info("Auction closed without any bid");
+                //TODO: notify To whoever made the auction that it closed without any bid
+            }
+        }
     }
 
 

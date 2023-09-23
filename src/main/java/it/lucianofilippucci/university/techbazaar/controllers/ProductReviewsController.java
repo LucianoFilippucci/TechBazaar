@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,17 +28,20 @@ import java.util.Optional;
 @RequestMapping("/product/reviews")
 public class ProductReviewsController {
 
-    @Autowired
     ProductReviewService productReviewService;
 
-    @Autowired
     ReviewsLikedService reviewsLikedService;
 
-    @Autowired
     UserService userService;
 
-    @Autowired
     ProductService productService;
+
+    public ProductReviewsController(ProductReviewService productReviewService, ReviewsLikedService reviewsLikedService, UserService userService, ProductService productService) {
+        this.productReviewService = productReviewService;
+        this.reviewsLikedService = reviewsLikedService;
+        this.userService = userService;
+        this.productService = productService;
+    }
 
     @GetMapping
     public List<ProductReviewsEntity> getAllReviews(@RequestParam("productId") int productId, @RequestParam("page") int page, @RequestParam("pageSize") int pageSize, @RequestParam("sortBy") String sortBy) {
@@ -98,6 +102,18 @@ public class ProductReviewsController {
     public ResponseEntity<Boolean> likeReview(@RequestParam("reviewId") int reviewId, @RequestParam("userId") int userId) {
         return new ResponseEntity<>(productReviewService.likeReview(reviewId, userId), HttpStatus.OK);
     }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/{id}/review/new/upload")
+    public ResponseEntity<ResponseMessage<String>> uploadReviewFile(@PathVariable("id") int id, @RequestParam("files") MultipartFile[] files, @RequestParam("userId") int userId) {
+        ResponseMessage<String> response = new ResponseMessage<>("No files Uploaded.");
+        if(files.length > 0) {
+            ProductEntity productEntity = productService.getById(id);
+            response = productReviewService.uploadFiles(files, id, productEntity.getStore().getUserId(), userId);
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 
 
 
