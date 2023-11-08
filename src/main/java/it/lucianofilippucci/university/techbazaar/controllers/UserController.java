@@ -1,8 +1,10 @@
 package it.lucianofilippucci.university.techbazaar.controllers;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import it.lucianofilippucci.university.techbazaar.entities.Role;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.*;
+import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.helpers.model.ERole;
 import it.lucianofilippucci.university.techbazaar.repositories.RoleRepository;
@@ -11,6 +13,7 @@ import it.lucianofilippucci.university.techbazaar.security.JwtUtils;
 import it.lucianofilippucci.university.techbazaar.services.UserDetailsImpl;
 import it.lucianofilippucci.university.techbazaar.services.UserService;
 import it.lucianofilippucci.university.techbazaar.services.mongodb.CartService;
+import it.lucianofilippucci.university.techbazaar.services.mongodb.WishlistService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,6 +50,8 @@ public class UserController {
 
     JwtUtils jwtUtils;
 
+    WishlistService wishlistService;
+
     public UserController(
             JwtUtils jwtUtils,
             PasswordEncoder passwordEncoder,
@@ -54,7 +59,8 @@ public class UserController {
             AuthenticationManager authenticationManager,
             CartService cartService,
             UserRepository userRepository,
-            UserService userService){
+            UserService userService,
+            WishlistService wishlistService){
         this.jwtUtils = jwtUtils;
         this.encoder = passwordEncoder;
         this.roleRepository = roleRepository;
@@ -62,6 +68,24 @@ public class UserController {
         this.cartService = cartService;
         this.userService = userService;
         this.userRepository = userRepository;
+        this.wishlistService = wishlistService;
+    }
+
+    @PostMapping("/auth/check-token")
+    public ResponseEntity<ResponseMessage<String>> checkTokenExpired(@RequestParam("token") String token) {
+        ResponseMessage<String> response = new ResponseMessage<String>().setIsError(false);
+        String newToken;
+
+        try {
+            if((newToken = jwtUtils.isExpired(token)) != null)
+                response.setMessage(newToken).setIsError(true);
+            response.setMessage("").setIsError(false);
+
+        } catch(ExpiredJwtException e) {
+
+        } catch (Exception e) {}
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/auth/login")
@@ -135,5 +159,34 @@ public class UserController {
     @PostMapping("/upload-thumbnail")
     public ResponseEntity<ResponseMessage<String>> uploadThumbnail(@RequestParam("files") MultipartFile[] file, @RequestParam("userId") int userId) {
         return new ResponseEntity<>(this.userService.uploadThumbnail(file, userId), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
+    @PostMapping("/edit/password")
+    public ResponseEntity<ResponseMessage<String>> editPassword(@RequestParam("newPassword") String newPwd, @RequestParam("userId") int userId) {
+        return this.userService.editPassword(encoder.encode(newPwd), userId);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/wishlist/add")
+    public ResponseEntity<Boolean> addToWishlist(@RequestParam("productId") int productId, @RequestParam("userId") int userId) {
+        return this.wishlistService.addToWishlist(userId, productId);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/wishlist/get")
+    public ArrayList<Product> getWishList(@RequestParam("userId") int userId) {
+        return this.wishlistService.getWishList(userId);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/wishlist/remove")
+    public ResponseEntity<Boolean> removeFromWishList(@RequestParam("userId") int userId, @RequestParam("productId") int productId) {
+        return this.wishlistService.remove(userId, productId);
+    }
+
+    @GetMapping("/wishlist/check-product")
+    public ResponseEntity<Boolean> proinUserWishlist(@RequestParam("userId") int userId, @RequestParam("productId") int productId) {
+        return this.wishlistService.checkProductWishlist(userId, productId);
     }
 }

@@ -23,7 +23,7 @@ public class MailerService implements  EmailService {
     }
 
 
-    public String sendSimpleMail(EmailEntity email) {
+    public boolean sendSimpleMail(EmailEntity email) {
         try {
             SimpleMailMessage mailMessage = new SimpleMailMessage();
 
@@ -33,9 +33,9 @@ public class MailerService implements  EmailService {
             mailMessage.setSubject(email.getSubject());
 
             javaMailSender.send(mailMessage);
-            return "EmailSent";
+            return true;
         } catch (Exception e) {
-            return "Error";
+            return false;
         }
     }
 

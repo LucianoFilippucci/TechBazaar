@@ -1,5 +1,6 @@
 package it.lucianofilippucci.university.techbazaar.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import it.lucianofilippucci.university.techbazaar.services.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -19,5 +19,6 @@ public class CartResponse {
     private float cartTotalAfterCoupon;
     private List<CouponEntity> couponList;
     private List<ProductInCart> products;
+    private int cartElements;
 }
 

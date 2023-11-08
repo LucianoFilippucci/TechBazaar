@@ -94,7 +94,7 @@ public class CartService {
         }
 
         taxTotal = (float) (cartTotal * 0.22);
-        return new CartResponse(cartTotal, taxTotal, totalToPay, validCoupons, cartProducts);
+        return new CartResponse(cartTotal, taxTotal, totalToPay, validCoupons, cartProducts, entity.getProductsInCart().size());
     }
 
     public List<String> getCartCoupon(String cartId) {

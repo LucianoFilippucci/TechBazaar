@@ -1,10 +1,12 @@
 package it.lucianofilippucci.university.techbazaar.helpers;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @Getter
 public class ResponseMessage<T> {
-    private final T message;
+    private T message;
     private boolean isError;
 
     public ResponseMessage(T text) {
@@ -13,6 +15,11 @@ public class ResponseMessage<T> {
 
     public ResponseMessage<T> setIsError(boolean isError) {
         this.isError = isError;
+        return this;
+    }
+
+    public ResponseMessage<T> setMessage(T message) {
+        this.message = message;
         return this;
     }
 

@@ -26,8 +26,12 @@ public class JwtUtils {
     public String generateJwtToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
+        return generate(userPrincipal.getUsername());
+    }
+
+    private String generate(String username) {
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
+                .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpiration))
                 .signWith(key(), SignatureAlgorithm.HS256)
@@ -58,5 +62,21 @@ public class JwtUtils {
         }
 
         return false;
+    }
+
+    // TODO: Remove
+    public String isExpired(String token) {
+        Date expDate = Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token).getBody().getExpiration();
+        Date now = new Date();
+        System.out.println("----------JWT----------");
+        System.out.println("EXPDATE ===> " + expDate);
+        System.out.println("NOW ====> " + now);
+
+
+        if(now.compareTo(expDate) > 0) {
+            String username = Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token).getBody().getSubject();
+            return generate(username);
+        }
+        return null;
     }
 }

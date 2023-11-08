@@ -26,6 +26,8 @@ public class CartController {
     @Autowired
     ProductService productService;
 
+
+
     @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     @GetMapping
     public ResponseEntity<ResponseMessage<Object>> getUserCart(@RequestParam("cartId") String cartId) {
@@ -48,6 +50,8 @@ public class CartController {
             return new ResponseEntity<>(new ResponseMessage<>("CartNotFound").setIsError(true), HttpStatus.BAD_REQUEST);
         }
     }
+
+
 
     @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     @PostMapping("/update-element")
@@ -78,7 +82,7 @@ public class CartController {
         }
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('STORE')")
     @GetMapping("/get-coupons")
     public List<String> getCartCoupons(@RequestParam("cartId") String cartId) {
         return this.cartService.getCartCoupon(cartId);

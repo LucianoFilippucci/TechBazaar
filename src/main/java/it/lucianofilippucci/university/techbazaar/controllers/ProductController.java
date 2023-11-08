@@ -65,7 +65,14 @@ public class ProductController {
     }
 
     @PostMapping("/edit")
-    public ResponseEntity<ResponseMessage<String>> editProduct(@RequestParam("productId") int productId, @RequestParam("storeId") int storeId, @RequestParam(value = "price", required = false) float price, @RequestParam(value = "name", required = false) String name, @RequestParam(value = "description", required = false) String description, @RequestParam(value = "category", required = false) String category, @RequestParam(value = "qty") int qty) {
+    public ResponseEntity<ResponseMessage<String>> editProduct(
+            @RequestParam("productId") int productId,
+            @RequestParam("storeId") int storeId,
+            @RequestParam(value = "price", required = false) float price,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "qty") int qty) {
         ResponseMessage<String> responseMessage = new ResponseMessage<>("");
         try{
             responseMessage = productService.editProduct(productId, storeId, price, name, description, category, qty);

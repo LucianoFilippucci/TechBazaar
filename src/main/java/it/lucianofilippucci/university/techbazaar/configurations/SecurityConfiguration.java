@@ -80,6 +80,8 @@ public class SecurityConfiguration  {
                                 .requestMatchers("/product/store-products").permitAll()
                                 .requestMatchers("/auction/").permitAll()
                                 .requestMatchers("/daily/").permitAll()
+                                .requestMatchers("/user/auth/check-token").permitAll()
+                                .requestMatchers("/user/wishlist/check-product").permitAll()
                                 .anyRequest().authenticated())
                 .cors(cors -> corsConfigurationSource());
         http.authenticationProvider(authenticationProvider());

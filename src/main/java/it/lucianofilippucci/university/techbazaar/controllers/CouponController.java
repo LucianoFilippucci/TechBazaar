@@ -40,6 +40,8 @@ public class CouponController {
             SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
             if (this.couponService.newCoupon(code, discount, storeId, category, formatter.parse(expirationDate), maxUses)) {
                 return new ResponseEntity<>("Coupon Created.", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("General Error.", HttpStatus.BAD_REQUEST);
             }
         } catch (StoreNotFound e) {
             return new ResponseEntity<>("Store Not Found.", HttpStatus.BAD_REQUEST);
@@ -48,7 +50,7 @@ public class CouponController {
         } catch (ParseException e) {
             return new ResponseEntity<>("Date Formatting Error.", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>("General Error.", HttpStatus.BAD_REQUEST);
+        //
 
     }
 

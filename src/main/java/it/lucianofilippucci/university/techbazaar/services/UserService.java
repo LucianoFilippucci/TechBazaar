@@ -1,22 +1,20 @@
 package it.lucianofilippucci.university.techbazaar.services;
 
-import com.dropbox.core.v2.files.FileMetadata;
-import com.dropbox.core.v2.sharing.SharedLinkMetadata;
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserAddressEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.NotificationEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.*;
-import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductInPurchase;
+import it.lucianofilippucci.university.techbazaar.helpers.Entities.EmailEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.helpers.exceptions.StoreNotFound;
 import it.lucianofilippucci.university.techbazaar.repositories.UserAddressRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.UserRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -39,17 +37,23 @@ public class UserService implements UserDetailsService {
 
     NotificationRepository notificationRepository;
 
+
+    @Autowired
+    @Lazy
     NotificationService notificationService;
 
+    @Autowired
+    @Lazy
+    MailerService mailerService;
+
+
     DropboxHelper dropboxHelper;
-    public UserService(DropboxHelper dropboxHelper, NotificationService notificationService, UserRepository userRepository, UserAddressRepository userAddressRepository, ProductService productService, NotificationRepository notificationRepository) {
+    public UserService(DropboxHelper dropboxHelper, UserRepository userRepository, UserAddressRepository userAddressRepository, ProductService productService, NotificationRepository notificationRepository) {
         this.userRepository = userRepository;
         this.userAddressRepository = userAddressRepository;
         this.productService = productService;
         this.notificationRepository = notificationRepository;
         this.dropboxHelper = dropboxHelper;
-        this.notificationService = notificationService;
-
     }
 
     @Override
@@ -101,12 +105,8 @@ public class UserService implements UserDetailsService {
         }
     }
 
-
-    public void setStoreOrder(int storeId, List<ProductInPurchase> products, String orderId) {
-
-    }
-
     public int getTotalNotifications(int userId) throws ObjectNotFoundException {
+
         return this.notificationService.totalUnreadNotifications(userId);
     }
 
@@ -121,6 +121,18 @@ public class UserService implements UserDetailsService {
            return new ResponseMessage<>("thumbnail available at: " + dropboxResponse.message().get(0));
        }
        return new ResponseMessage<>("Error -> " + dropboxResponse.message()).setIsError(true);
+    }
+
+    public ResponseEntity<ResponseMessage<String>> editPassword(String newPassword, int userId) {
+        Optional<UserEntity> user = this.userRepository.findUserEntityByUserId(userId);
+        if(user.isPresent()) {
+            user.get().setPassword(newPassword);
+            this.userRepository.save(user.get());
+            EmailEntity email = new EmailEntity(user.get().getEmail(), "Password successfully changed", "Password Changed", "", "lucianofilippucci@gmail.com");
+            this.mailerService.sendSimpleMail(email);
+            return new ResponseEntity<ResponseMessage<String>>(new ResponseMessage("Password Updated").setIsError(false), HttpStatus.OK);
+        }
+        return new ResponseEntity<ResponseMessage<String>>(new ResponseMessage("Generic Error.").setIsError(true), HttpStatus.BAD_REQUEST);
     }
 
 }
