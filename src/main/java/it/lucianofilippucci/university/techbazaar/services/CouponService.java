@@ -101,20 +101,24 @@ public class CouponService {
             }
             if(!isPresent) {
                 for(ProductInCartModel picm : ce.getProductsInCart()) {
-                    ProductEntity productEntity = productService.getById(picm.getProductId());
-                    if(productEntity.getProductCategory().equals(couponEntity.getCategory())) {
-                        Date now = new Date();
-                        Timestamp timestamp = new Timestamp(now.getTime());
-                        Date exp = couponEntity.getExpirationDate();
-                        if(timestamp.before(exp)) {
-                            if(couponEntity.getTimesUsed() >= couponEntity.getMaxUses()) throw new CouponMaxUseReachedException();
-                            float discount = (picm.getProductPrice() * couponEntity.getDiscount()) / 100;
-                            float newPrice = picm.getProductPrice() - discount;
-                            picm.setProductPrice(newPrice);
-                            couponEntity.setTimesUsed(couponEntity.getTimesUsed() + 1);
-                            ce.getCoupons().add(new CartCouponModel(couponEntity.getCode(), couponEntity.getDiscount()));
-                            user.getUsedCoupon().add(couponEntity);
-                        } else throw new CouponExpiredException();
+                    try {
+                        ProductEntity productEntity = productService.getById(picm.getProductId());
+                        if(productEntity.getProductCategory().equals(couponEntity.getCategory())) {
+                            Date now = new Date();
+                            Timestamp timestamp = new Timestamp(now.getTime());
+                            Date exp = couponEntity.getExpirationDate();
+                            if(timestamp.before(exp)) {
+                                if(couponEntity.getTimesUsed() >= couponEntity.getMaxUses()) throw new CouponMaxUseReachedException();
+                                float discount = (picm.getProductPrice() * couponEntity.getDiscount()) / 100;
+                                float newPrice = picm.getProductPrice() - discount;
+                                picm.setProductPrice(newPrice);
+                                couponEntity.setTimesUsed(couponEntity.getTimesUsed() + 1);
+                                ce.getCoupons().add(new CartCouponModel(couponEntity.getCode(), couponEntity.getDiscount()));
+                                user.getUsedCoupon().add(couponEntity);
+                            } else throw new CouponExpiredException();
+                        }
+                    } catch (ObjectNotFoundException e) {
+                        //TODO
                     }
                 }
 

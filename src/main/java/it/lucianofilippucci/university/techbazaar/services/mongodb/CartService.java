@@ -82,14 +82,16 @@ public class CartService {
         List<CouponEntity> validCoupons = new ArrayList<>();
 
         for(int i = 0; i < entity.getProductsInCart().size(); i++) {
-            ProductInCartModel picm = entity.getProductsInCart().get(i);
-            ProductEntity product = productService.getById(picm.getProductId());
-            ProductInCart pic = new ProductInCart(product.getProductId(), product.getProductPrice(), product.getProductName(), picm.getQty(), product.getProductCategory());
-            cartProducts.add(pic);
+            try {
+                ProductInCartModel picm = entity.getProductsInCart().get(i);
+                ProductEntity product = productService.getById(picm.getProductId());
+                ProductInCart pic = new ProductInCart(product.getProductId(), product.getProductPrice(), product.getProductName(), picm.getQty(), product.getProductCategory());
+                cartProducts.add(pic);
 
-            cartTotal += product.getProductPrice() * picm.getQty();
-            totalToPay += (product.getProductPrice() * picm.getQty()) - (picm.getProductPrice() * picm.getQty());
-            taxTotal =  (cartTotal * product.getIva()) / 100;
+                cartTotal += product.getProductPrice() * picm.getQty();
+                totalToPay += (product.getProductPrice() * picm.getQty()) - (picm.getProductPrice() * picm.getQty());
+                taxTotal = (cartTotal * product.getIva()) / 100;
+            } catch(ObjectNotFoundException e) {}
 
         }
 
@@ -176,8 +178,8 @@ public class CartService {
     }
 
     @Transactional
-    public ResponseMessage<String> placeOrder(String cartId, int userAddressId) throws ProductQuantityUnavailableException, NotAuthorizedException, ObjectNotFoundException, CartNotFoundException {
-        // TODO: understand how to explicit rollback, atm it's unsage
+    public boolean placeOrder(String cartId, int userAddressId) throws ProductQuantityUnavailableException, NotAuthorizedException, ObjectNotFoundException, CartNotFoundException {
+        // TODO: understand how to explicit rollback, atm it's unsafe
 
         UserEntity user = userRepository.findUserEntityByCartId(cartId);
         CartEntity cart = cartRepository.findByCartId(cartId);
@@ -266,7 +268,7 @@ public class CartService {
         userRepository.save(user);
         orderDetailsRepository.save(orderDetails);
 
-        return new ResponseMessage<>("Order Correctly saved").setIsError(false);
+        return true;
     }
 
 }

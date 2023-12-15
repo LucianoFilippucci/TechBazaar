@@ -1,7 +1,6 @@
 package it.lucianofilippucci.university.techbazaar.services;
 
 import it.lucianofilippucci.university.techbazaar.entities.OrderEntity;
-import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.OrderDetailsEntity;
 import it.lucianofilippucci.university.techbazaar.entities.mongodb.StoreOrderEntity;
@@ -9,7 +8,7 @@ import it.lucianofilippucci.university.techbazaar.helpers.Entities.Order;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.Product;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductInPurchase;
 import it.lucianofilippucci.university.techbazaar.helpers.Helpers;
-import it.lucianofilippucci.university.techbazaar.helpers.EverythingServices;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.repositories.OrderRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.OrderDetailsRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.StoreOrderRepository;
@@ -28,7 +27,7 @@ public class OrderService {
     OrderDetailsRepository orderDetailsRepository;
 
     @Autowired
-    EverythingServices everythingServices;
+    UnifiedAccessService unifiedAccessService;
 
     @Autowired
     StoreOrderRepository storeOrderRepository;
@@ -42,16 +41,21 @@ public class OrderService {
         LinkedList<Order> orderList = new LinkedList<>();
 
         for(OrderEntity order : list) {
-            OrderDetailsEntity detail = everythingServices.getOrderDetail(order.getOrderId());
+            OrderDetailsEntity detail = unifiedAccessService.getOrderDetail(order.getOrderId());
             if(detail != null) {
 
                 LinkedList<Product> productInList = new LinkedList<>();
                 // Aggiungere Qualcosa per mostrare i dati di ProductInPurchase
                 for(ProductInPurchase pip : detail.getProductInPurchases()) {
-                    Product p = new Product(everythingServices.getProduct(pip.getProductId()));
-                    p.setQty(pip.getProductQuantity());
-                    p.setPrice(pip.getUnitaryPrice());
-                    productInList.add(p);
+                    try {
+                        Product p = new Product(unifiedAccessService.getProduct(pip.getProductId()));
+                        p.setQty(pip.getProductQuantity());
+                        p.setPrice(pip.getUnitaryPrice());
+                        productInList.add(p);
+                    } catch( ObjectNotFoundException e) {
+                        return orderList;
+                        //TODO: wrap inside ResponseModel Object
+                    }
                 }
                 Date today = new Date();
                 Calendar calendar = Calendar.getInstance();

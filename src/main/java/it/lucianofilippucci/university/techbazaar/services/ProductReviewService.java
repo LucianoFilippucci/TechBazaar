@@ -2,15 +2,18 @@ package it.lucianofilippucci.university.techbazaar.services;
 
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.entities.ProductReviewsEntity;
+import it.lucianofilippucci.university.techbazaar.entities.UserEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.DropboxHelper;
 import it.lucianofilippucci.university.techbazaar.helpers.DropboxResponse;
 import it.lucianofilippucci.university.techbazaar.helpers.FilePathType;
 import it.lucianofilippucci.university.techbazaar.helpers.ResponseMessage;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.repositories.ProductReviewsRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.ProductResourcesRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.mongodb.ReviewsLikedRepository;
 import it.lucianofilippucci.university.techbazaar.services.mongodb.ProductResourcesService;
 import it.lucianofilippucci.university.techbazaar.services.mongodb.ReviewsLikedService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -26,28 +29,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ProductReviewService {
 
     private final ProductReviewsRepository productReviewsRepository;
 
-    DropboxHelper dropboxHelper;
+    private final DropboxHelper dropboxHelper;
 
-    ProductService productService;
+    private final ProductService productService;
 
-    ReviewsLikedService reviewsLikedService;
+    private final ReviewsLikedService reviewsLikedService;
     private ProductResourcesService productResourcesService;
-
-    public ProductReviewService(ProductReviewsRepository productReviewsRepository, DropboxHelper dropboxHelper, ProductService productService, ReviewsLikedService reviewsLikedService, ProductResourcesService productResourcesService) {
-        this.dropboxHelper = dropboxHelper;
-        this.productReviewsRepository = productReviewsRepository;
-        this.productService = productService;
-        this.reviewsLikedService = reviewsLikedService;
-        this.productResourcesService = productResourcesService;
-    }
+    private final UnifiedAccessService unifiedAccessService;
 
     public List<ProductReviewsEntity> getAllReviews(int productId, int page, int pageSize, String sortBy) {
         Pageable paging = PageRequest.of(page, pageSize);
@@ -85,9 +84,22 @@ public class ProductReviewService {
 
 
 
-    public boolean newReview(ProductReviewsEntity pre) {
-        ProductReviewsEntity p = productReviewsRepository.save(pre);
-        return p.getProduct().getProductId() != 0;
+    public boolean newReview(int productId, int userId, int starCount, String title, String body) throws ObjectNotFoundException {
+        Optional<UserEntity> user = unifiedAccessService.getUserById(userId);
+
+        if(user.isPresent()) {
+            ProductReviewsEntity productReview = new ProductReviewsEntity();
+            productReview.setProduct(unifiedAccessService.getProduct(productId));
+            productReview.setUser(user.get());
+            productReview.setTitle(title);
+            productReview.setStarCount(starCount);
+            productReview.setDate(new Date());
+            productReview.setBody(body);
+
+           return productReviewsRepository.save(productReview).getReviewId() != 0;
+        } else {
+            throw new ObjectNotFoundException();
+        }
     }
 
     public ResponseMessage<String> uploadFiles(MultipartFile[] files, int productId, int storeId, int userId) {

@@ -175,8 +175,8 @@ public class UserController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/wishlist/get")
-    public ArrayList<Product> getWishList(@RequestParam("userId") int userId) {
-        return this.wishlistService.getWishList(userId);
+    public ArrayList<Product> getWishList(@RequestParam("userId") int userId, @RequestParam("pageNumber") int pageNumber, @RequestParam("pageSize") int pageSize) {
+        return this.wishlistService.getWishList(userId, pageNumber, pageSize);
     }
 
     @PreAuthorize("hasRole('USER')")

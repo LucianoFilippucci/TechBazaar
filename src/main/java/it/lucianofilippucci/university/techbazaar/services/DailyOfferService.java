@@ -3,6 +3,7 @@ package it.lucianofilippucci.university.techbazaar.services;
 import it.lucianofilippucci.university.techbazaar.entities.DailyOfferEntity;
 import it.lucianofilippucci.university.techbazaar.entities.ProductEntity;
 import it.lucianofilippucci.university.techbazaar.helpers.Entities.ProductReview;
+import it.lucianofilippucci.university.techbazaar.helpers.exceptions.ObjectNotFoundException;
 import it.lucianofilippucci.university.techbazaar.repositories.DailyOfferRepository;
 import it.lucianofilippucci.university.techbazaar.repositories.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DailyOfferService {
@@ -28,13 +30,16 @@ public class DailyOfferService {
     @Transactional
     public boolean newDailyOffer(int productId, int storeId, Date date, int discount) {
         DailyOfferEntity dailyOfferEntity = new DailyOfferEntity();
-        ProductEntity product = this.productRepository.findByProductId(productId);
-        dailyOfferEntity.setProduct(product);
-        dailyOfferEntity.setDiscount(discount);
-        dailyOfferEntity.setDate(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-        dailyOfferEntity.setStatus("NOTSTARTED");
-        this.dailyOfferRepository.save(dailyOfferEntity);
-        return true;
+        Optional<ProductEntity> product = this.productRepository.findByProductId(productId);
+        if(product.isPresent()) {
+            dailyOfferEntity.setProduct(product.get());
+            dailyOfferEntity.setDiscount(discount);
+            dailyOfferEntity.setDate(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            dailyOfferEntity.setStatus("NOTSTARTED");
+            this.dailyOfferRepository.save(dailyOfferEntity);
+            return true;
+        }
+        return false;
     }
 
     public List<DailyOfferEntity> getDailyOffer() {

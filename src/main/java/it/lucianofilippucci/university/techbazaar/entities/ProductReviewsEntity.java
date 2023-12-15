@@ -15,6 +15,7 @@ import java.util.Date;
 @ToString
 @Entity
 @Table(name = "product_reviews", schema = "techbazaar")
+
 public class ProductReviewsEntity {
 
     @Id

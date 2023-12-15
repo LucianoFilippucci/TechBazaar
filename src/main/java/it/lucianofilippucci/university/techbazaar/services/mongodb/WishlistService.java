@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.print.attribute.standard.PagesPerMinute;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -30,38 +31,53 @@ public class WishlistService {
     }
 
     public ResponseEntity<Boolean> addToWishlist(int userId, int productId) {
-        Optional<UserEntity> user = this.userService.getById(userId);
-        if(user.isEmpty()) return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
-        Optional<WishListEntity> wishlist = this.wishlistRepository.findByUserId(userId);
-        Optional<ProductEntity> product = Optional.ofNullable(this.productService.getById(productId));
-        if(product.isEmpty()) return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
+        try {
+            Optional<UserEntity> user = this.userService.getById(userId);
+            if(user.isEmpty()) return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
+            Optional<WishListEntity> wishlist = this.wishlistRepository.findByUserId(userId);
+            Optional<ProductEntity> product = Optional.ofNullable(this.productService.getById(productId));
+            if(product.isEmpty()) return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
 
-        if(wishlist.isEmpty()) {
-            WishListEntity wish = new WishListEntity();
-            wish.setUserId(userId);
-            ArrayList<Integer> products = new ArrayList<>();
-            products.add(productId);
-            wish.setProducts(products);
-            this.wishlistRepository.save(wish);
-        } else {
-            wishlist.get().getProducts().add(productId);
-            this.wishlistRepository.save(wishlist.get());
+            if(wishlist.isEmpty()) {
+                WishListEntity wish = new WishListEntity();
+                wish.setUserId(userId);
+                ArrayList<Integer> products = new ArrayList<>();
+                products.add(productId);
+                wish.setProducts(products);
+                this.wishlistRepository.save(wish);
+            } else {
+                wishlist.get().getProducts().add(productId);
+                this.wishlistRepository.save(wishlist.get());
+            }
+
+            return new ResponseEntity<>(true, HttpStatus.OK);
+
+        } catch (ObjectNotFoundException e) {
+            //TODO:
+            return new ResponseEntity<>(false, HttpStatus.NOT_IMPLEMENTED);
         }
-
-        return new ResponseEntity<>(true, HttpStatus.OK);
     }
 
-    public ArrayList<Product> getWishList(int userId) {
+    public ArrayList<Product> getWishList(int userId, int pageNumber, int pageSize) {
         Optional<WishListEntity> wishlist = this.wishlistRepository.findByUserId(userId);
         ArrayList<Product> wishList = new ArrayList<>();
 
         if(wishlist.isPresent()) {
-            for (Integer elem: wishlist.get().getProducts()) {
-                Optional<ProductEntity> product = Optional.ofNullable(this.productService.getById(elem));
-                if(product.isPresent()) {
-                    Product pp = new Product(product.get());
-                    wishList.add(pp);
-                } //TODO: handle if not present
+            if(wishlist.get().getProducts().size() == 0) return wishList;
+
+            for(int i = 0; i < pageSize; i++) {
+                try {
+                    int remainingElems = wishlist.get().getProducts().size() - (pageNumber * pageSize) - i;
+                    if(remainingElems == 0)
+                        break;
+                    int nextElem = (pageNumber * pageSize) + i;
+                    Optional<ProductEntity> product = Optional.ofNullable(this.productService.getById(wishlist.get().getProducts().get(nextElem)));
+
+                    product.ifPresent(productEntity -> wishList.add(new Product(productEntity)));
+                    //TODO: Handle if not present
+                } catch (ObjectNotFoundException e) {
+                    //TODO
+                }
             }
         }
         return wishList;
